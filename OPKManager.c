@@ -17,11 +17,13 @@
 
 #include <sparrow3d.h>
 
+#define VERSION "1.0.0"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
-#define FONT_SIZE 12
-#define FONT_SIZE_SMALL 10
-#define FONT_SIZE_VERY_SMALL 9
-#define BACKGROUND_COLOR spGetRGB(48,0,48)
+#define FONT_SIZE 10
+#define FONT_SIZE_SMALL 9
+#define FONT_SIZE_VERY_SMALL 8
+#define FONT_COLOR spGetRGB(48,48,48)
+#define BACKGROUND_COLOR spGetRGB(255,255,180)
 
 SDL_Surface* screen;
 spFontPointer font = NULL;
@@ -30,7 +32,10 @@ spFontPointer font_very_small = NULL;
 void draw( void )
 {
 	spClearTarget( BACKGROUND_COLOR );
+	spFontDrawMiddle(screen->w/2,0,0,"OPKManager",font);
 
+	spFontDraw(0,screen->h-font_very_small->maxheight,0,"made by Ziz",font_very_small);
+	spFontDrawRight(screen->w,screen->h-font_very_small->maxheight,0,"Version "VERSION,font_very_small);
 	spFlip();
 }
 
@@ -52,7 +57,7 @@ void resize(Uint16 w,Uint16 h)
 	if (font)
 		spFontDelete(font);
 	font = spFontLoad(FONT_LOCATION,FONT_SIZE*spGetSizeFactor()>>SP_ACCURACY);
-	spFontAdd(font,SP_FONT_GROUP_ASCII,65535);//whole ASCII
+	spFontAdd(font,SP_FONT_GROUP_ASCII,FONT_COLOR);//whole ASCII
 	spFontAddBorder(font,BACKGROUND_COLOR);
 	spFontMulWidth(font,15<<SP_ACCURACY-4);
 	spFontAddButton( font, 'a', SP_BUTTON_LEFT_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
@@ -68,7 +73,7 @@ void resize(Uint16 w,Uint16 h)
 	if (font_small)
 		spFontDelete(font_small);
 	font_small = spFontLoad(FONT_LOCATION,FONT_SIZE_SMALL*spGetSizeFactor()>>SP_ACCURACY);
-	spFontAdd(font_small,SP_FONT_GROUP_ASCII,spGetRGB(192,192,192));//whole ASCII
+	spFontAdd(font_small,SP_FONT_GROUP_ASCII,FONT_COLOR);//whole ASCII
 	spFontAddBorder(font_small,BACKGROUND_COLOR);
 	spFontMulWidth(font_small,15<<SP_ACCURACY-4);
 	spFontAddButton( font_small, 'a', SP_BUTTON_LEFT_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
@@ -83,7 +88,7 @@ void resize(Uint16 w,Uint16 h)
 	if (font_very_small)
 		spFontDelete(font_very_small);
 	font_very_small = spFontLoad(FONT_LOCATION,FONT_SIZE_VERY_SMALL*spGetSizeFactor()>>SP_ACCURACY);
-	spFontAdd(font_very_small,SP_FONT_GROUP_ASCII,spGetRGB(192,192,192));//whole ASCII
+	spFontAdd(font_very_small,SP_FONT_GROUP_ASCII,FONT_COLOR);//whole ASCII
 	spFontAddBorder(font_very_small,BACKGROUND_COLOR);
 	spFontMulWidth(font_very_small,15<<SP_ACCURACY-4);
 	spFontAddButton( font_very_small, 'a', SP_BUTTON_LEFT_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
