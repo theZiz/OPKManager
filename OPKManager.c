@@ -27,8 +27,7 @@
 #define VERSION "1.0.0"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
 #define FONT_SIZE 10
-#define FONT_SIZE_SMALL 9
-#define FONT_SIZE_VERY_SMALL 8
+#define FONT_SIZE_SMALL 8
 #define FONT_COLOR spGetRGB(48,48,48)
 #define BACKGROUND_COLOR spGetRGB(225,225,160)
 #define LIST_BACKGROUND_COLOR spGetRGB(255,255,180)
@@ -36,9 +35,10 @@
 
 SDL_Surface* screen;
 SDL_Surface* listSurface = NULL;
+SDL_Surface* sdcard_surface;
+SDL_Surface* internal_surface;
 spFontPointer font = NULL;
 spFontPointer font_small = NULL;
-spFontPointer font_very_small = NULL;
 
 typedef struct sSourceList *pSourceList;
 typedef struct sSourceList {
@@ -83,18 +83,46 @@ void draw( void )
 	pOpkList opk = opkList;
 	while (opk)
 	{
+		spSetVerticalOrigin(SP_TOP);
+		spSetHorizontalOrigin(SP_LEFT);			
 		if (i == selected)
 		{
-			spSetVerticalOrigin(SP_TOP);
-			spSetHorizontalOrigin(SP_LEFT);			
 			spRectangle(0,1+(offset+i)*font->maxheight,0,screen->w-2,font->maxheight,SELECTED_BACKGROUND_COLOR);
-			spSetVerticalOrigin(SP_CENTER);
-			spSetHorizontalOrigin(SP_CENTER);
 		}
-		spFontDraw(2,1+(offset+i)*font->maxheight,0,opk->longName,font);
+		int sdcard = 0, internal = 0, web = 0;
+		pSourceList source = opk->sources;
+		while (source)
+		{
+			switch (source->location)
+			{
+				case 0: internal = 1; break;
+				case 1: sdcard = 1; break;
+				case 2: web = 1; break;
+			}
+			source = source->next;
+		}
+		if (internal)
+			spBlitSurface(2+0*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,internal_surface);
+		if (sdcard)
+			spBlitSurface(2+1*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,sdcard_surface);
+		spSetVerticalOrigin(SP_CENTER);
+		spSetHorizontalOrigin(SP_CENTER);
+		spFontDraw(2+3*16,1+(offset+i)*font->maxheight,0,opk->longName,font);
 		i++;
 		opk = opk->next;
-	}	
+	}
+	if (offset != listSurface->h/font->maxheight-opk_count)
+	{
+		spTriangle(listSurface->w- 1,listSurface->h-11,0,
+		           listSurface->w-11,listSurface->h-11,0,
+		           listSurface->w- 6,listSurface->h- 6,0,FONT_COLOR);
+	}
+	if (offset != 0)
+	{
+		spTriangle(listSurface->w- 6,  6,0,
+		           listSurface->w-11, 11,0,
+		           listSurface->w- 1, 11,0,FONT_COLOR);
+	}
 	//drawing all
 	spSelectRenderTarget(spGetWindowSurface());
 	spClearTarget( BACKGROUND_COLOR );
@@ -104,8 +132,8 @@ void draw( void )
 	spBlitSurface( 1, font->maxheight,0,listSurface);
 	spSetVerticalOrigin(SP_CENTER);
 	spSetHorizontalOrigin(SP_CENTER);
-	spFontDraw(0,screen->h-font_very_small->maxheight,0,"made by Ziz",font_very_small);
-	spFontDrawRight(screen->w,screen->h-font_very_small->maxheight,0,"Version "VERSION,font_very_small);
+	spFontDraw(0,screen->h-font_small->maxheight,0,"made by Ziz",font_small);
+	spFontDrawRight(screen->w,screen->h-font_small->maxheight,0,"Version "VERSION,font_small);
 	spFlip();
 }
 
@@ -185,25 +213,10 @@ void resize(Uint16 w,Uint16 h)
 	spFontAddButton( font_small, 'S', SP_BUTTON_START_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 	spFontAddButton( font_small, 'E', SP_BUTTON_SELECT_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 
-	if (font_very_small)
-		spFontDelete(font_very_small);
-	font_very_small = spFontLoad(FONT_LOCATION,FONT_SIZE_VERY_SMALL*spGetSizeFactor()>>SP_ACCURACY);
-	spFontAdd(font_very_small,SP_FONT_GROUP_ASCII,FONT_COLOR);//whole ASCII
-	spFontAddBorder(font_very_small,BACKGROUND_COLOR);
-	spFontMulWidth(font_very_small,15<<SP_ACCURACY-4);
-	spFontAddButton( font_very_small, 'a', SP_BUTTON_LEFT_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
-	spFontAddButton( font_very_small, 'd', SP_BUTTON_RIGHT_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
-	spFontAddButton( font_very_small, 'w', SP_BUTTON_UP_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
-	spFontAddButton( font_very_small, 's', SP_BUTTON_DOWN_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
-	spFontAddButton( font_very_small, 'q', SP_BUTTON_L_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
-	spFontAddButton( font_very_small, 'e', SP_BUTTON_R_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
-	spFontAddButton( font_very_small, 'S', SP_BUTTON_START_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
-	spFontAddButton( font_very_small, 'E', SP_BUTTON_SELECT_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
-
   if (listSurface)
 		spDeleteSurface(listSurface);
 	listSurface = spCreateSurface(w-2,
-	                              h-font->maxheight-font_very_small->maxheight);
+	                              h-font->maxheight-font_small->maxheight);
 
 }
 
@@ -214,6 +227,8 @@ int main(int argc, char **argv)
 	spInitMath();
 	screen = spCreateDefaultWindow();
 	resize(screen->w,screen->h);
+	sdcard_surface = spLoadSurface("./data/sdcard.png");
+	internal_surface = spLoadSurface("./data/internal.png");
 	spSetZSet(0);
 	spSetZTest(0);
 	info("Searching internal packages...");
@@ -224,12 +239,13 @@ int main(int argc, char **argv)
 	info("Searching sdcard packages...");
 	fileList = NULL;
 	spFileGetDirectory(&fileList,SDCARD,0,1);
-	merge_fileList_to_opkList(fileList,0);
+	merge_fileList_to_opkList(fileList,1);
 	spFileDeleteList(fileList);
 	spLoop( draw, calc, 10, resize, NULL );
 	spFontDelete(font);
 	spFontDelete(font_small);
-	spFontDelete(font_very_small);
+	spDeleteSurface(sdcard_surface);
+	spDeleteSurface(internal_surface);
 	spQuitCore();
 	return 0;
 }
