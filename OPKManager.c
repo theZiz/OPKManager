@@ -41,6 +41,7 @@ SDL_Surface* web_surface;
 SDL_Surface* update_surface;
 spFontPointer font = NULL;
 spFontPointer font_small = NULL;
+#define ONE_HOUR (60*60)
 
 typedef struct sSourceList *pSourceList;
 typedef struct sSourceList {
@@ -65,7 +66,10 @@ int next_in_a_row = 0;
 int time_until_next = 0;
 int opk_count = 0;
 
+int show_details = 0;
+
 #include "list.c"
+#include "details.c"
 
 void info(char* buffer)
 {
@@ -83,6 +87,7 @@ void draw( void )
 	spClearTarget( LIST_BACKGROUND_COLOR );
 	int i = 0;
 	pOpkList opk = opkList;
+	pOpkList sel = NULL;
 	while (opk)
 	{
 		spSetVerticalOrigin(SP_TOP);
@@ -90,6 +95,7 @@ void draw( void )
 		if (i == selected)
 		{
 			spRectangle(0,1+(offset+i)*font->maxheight,0,screen->w-2,font->maxheight,SELECTED_BACKGROUND_COLOR);
+			sel = opk;
 		}
 		int sdcard = 0, internal = 0, web = 0;
 		int sdcard_u = 0, internal_u = 0, web_u = 0;
@@ -110,7 +116,7 @@ void draw( void )
 				case 1: sdcard = 1; break;
 				case 2: web = 1; break;
 			}
-			if (oldest < source->version)
+			if (oldest+ONE_HOUR < source->version)
 				switch (source->location)
 				{
 					case 0: internal_u = 1; break;
@@ -150,6 +156,7 @@ void draw( void )
 		           listSurface->w- 1, 11,0,FONT_COLOR);
 	}
 	//drawing all
+	
 	spSelectRenderTarget(spGetWindowSurface());
 	spClearTarget( BACKGROUND_COLOR );
 	spFontDrawMiddle(screen->w/2,0,0,"OPKManager",font);
@@ -182,18 +189,31 @@ void draw( void )
 	spFontDrawMiddle(1*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[a]: Copy",font_small);
 	spFontDrawMiddle(3*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[d]: Move",font_small);
 	spFontDrawMiddle(5*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[w]: Install",font_small);
-	spFontDrawMiddle(7*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[q]: Help",font_small);
+	spFontDrawMiddle(7*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[q]: Update",font_small);
 	spFontDrawMiddle(9*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[e]: Run",font_small);
 	spFontDraw(0,screen->h-font_small->maxheight,0,"made by Ziz",font_small);
 	spFontDrawMiddle(3*screen->w/10,screen->h-font_small->maxheight,0,"[w]: Delete",font_small);
 	spFontDrawMiddle(5*screen->w/10,screen->h-font_small->maxheight,0,"[S]: Details",font_small);
 	spFontDrawMiddle(7*screen->w/10,screen->h-font_small->maxheight,0,"[E]: Exit",font_small);
 	spFontDrawRight(screen->w,screen->h-font_small->maxheight,0,"Version "VERSION,font_small);
+	if (show_details)
+		draw_details(sel);
 	spFlip();
 }
 
 int calc(Uint32 steps)
 {
+	if (show_details)
+	{
+		show_details = calc_details();
+		return 0;
+	}
+	if (spGetInput()->button[SP_BUTTON_START_NOWASD])
+	{
+		spGetInput()->button[SP_BUTTON_START_NOWASD] = 0;
+		show_details = 1;
+		return 0;
+	}
 	if (time_until_next > 0)
 		time_until_next -= steps;
 	if (spGetInput()->axis[1] < 0 && selected > 0)
@@ -224,7 +244,7 @@ int calc(Uint32 steps)
 		time_until_next = 0;
 		next_in_a_row = 0;
 	}
-	if (spGetInput()->button[SP_BUTTON_SELECT])
+	if (spGetInput()->button[SP_BUTTON_SELECT_NOWASD])
 		return 1;
 	return 0;
 }
