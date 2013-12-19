@@ -29,7 +29,7 @@ all: OPKManager
 targets:
 	@echo "The targets are the same like for sparrow3d. :P"
 
-OPKManager: OPKManager.c makeBuildDir
+OPKManager: OPKManager.c list.c makeBuildDir
 	cp $(SPARROW_LIB)/libsparrow3d.so $(BUILD)
 	cp $(SPARROW_LIB)/libsparrowNet.so $(BUILD)
 	$(CPP) $(CFLAGS) OPKManager.c $(SDL) $(INCLUDE) $(LIB) $(STATIC) $(DYNAMIC) -o $(BUILD)/OPKManager

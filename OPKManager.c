@@ -32,6 +32,7 @@
 #define FONT_COLOR spGetRGB(48,48,48)
 #define BACKGROUND_COLOR spGetRGB(225,225,160)
 #define LIST_BACKGROUND_COLOR spGetRGB(255,255,180)
+#define SELECTED_BACKGROUND_COLOR spGetRGB(185,185,100)
 
 SDL_Surface* screen;
 SDL_Surface* listSurface = NULL;
@@ -57,91 +58,12 @@ typedef struct sOpkList {
 } tOpkList;
 
 pOpkList opkList = NULL;
+int selected = 0;
+int next_in_a_row = 0;
+int time_until_next = 0;
+int opk_count = 0;
 
-void add_new_source(pOpkList file,int kind,char* url,Sint64 version)
-{
-	pSourceList newSource = (pSourceList)malloc(sizeof(tSourcelist));
-	newSource->version = version;
-	newSource->location = kind;
-	if (url)
-	{
-		int l = strlen(url)+1;
-		newSource->url = (char*)malloc(l);
-		memcpy(newSource->url,url,l);
-	}
-	else
-		url = NULL;
-	newSource->next = file->sources;
-	file->sources = newSource;
-}
-
-void add_new_file(char* filename,int kind,char* url,Sint64 version)
-{
-	pOpkList newOpk = (pOpkList)malloc(sizeof(tOpkList));
-	sprintf(newOpk->fileName,"%s",filename);
-	sprintf(newOpk->longName,"%s",filename);
-	int l = strlen(newOpk->longName);
-	if (l > 4)
-		newOpk->longName[l-4] = 0;
-	int i;
-	for (i = 0; newOpk->longName[i] != 0; i++)
-	{
-		if (newOpk->longName[i] >= 'A' && newOpk->longName[i] <= 'Z')
-			newOpk->smallLongName[i] = newOpk->longName[i]-'A'+'a';
-		else
-			newOpk->smallLongName[i] = newOpk->longName[i];
-	}
-	newOpk->smallLongName[i] = 0;
-	newOpk->sources = NULL;
-	add_new_source(newOpk,kind,url,version);
-	//Searching the first, which is bigger
-	pOpkList bigger = opkList;
-	pOpkList smaller = NULL;
-	while (bigger)
-	{
-		if (strcmp(newOpk->smallLongName,bigger->smallLongName) < 0)
-			break;
-		smaller = bigger;
-		bigger = bigger->next;
-	}
-	if (smaller)
-		smaller->next = newOpk;
-	else
-		opkList = newOpk;
-	newOpk->next = bigger;
-}
-
-void add_file_to_opkList(char* filename,int kind,int version)
-{
-	//Searching in the opkList
-	pOpkList file = opkList;
-	while (file)
-	{
-		if (strcmp(file->fileName,filename) == 0)
-			break;
-		file = file->next;
-	}
-	if (file) //found
-		add_new_source(file,kind,NULL,version);
-	else
-		add_new_file(filename,kind,NULL,version);
-}
-
-void merge_fileList_to_opkList(spFileListPointer fileList,int kind)
-{
-	spFileListPointer file = fileList;
-	while (file)
-	{
-		//Searching the last /
-		int i;
-		for (i = strlen(file->name)-1; i >= 0; i--)
-			if (file->name[i] == '/')
-				break;
-		char* filename = &(file->name[i+1]);
-		add_file_to_opkList(filename,kind,file->last_mod);
-		file = file->next;
-	}
-}
+#include "list.c"
 
 void info(char* buffer)
 {
@@ -159,7 +81,15 @@ void draw( void )
 	pOpkList opk = opkList;
 	while (opk)
 	{
-		spFontDraw(1,1+i*font->maxheight,0,opk->longName,font);
+		if (i == selected)
+		{
+			spSetVerticalOrigin(SP_TOP);
+			spSetHorizontalOrigin(SP_LEFT);			
+			spRectangle(1,1+i*font->maxheight,0,screen->w-2,font->maxheight,SELECTED_BACKGROUND_COLOR);
+			spSetVerticalOrigin(SP_CENTER);
+			spSetHorizontalOrigin(SP_CENTER);
+		}
+		spFontDraw(2,1+i*font->maxheight,0,opk->longName,font);
 		i++;
 		opk = opk->next;
 	}	
@@ -179,6 +109,32 @@ void draw( void )
 
 int calc(Uint32 steps)
 {
+	if (time_until_next > 0)
+		time_until_next -= steps;
+	if (spGetInput()->axis[1] < 0 && selected > 0)
+	{
+		if (time_until_next <= 0)
+		{
+			selected--;
+			next_in_a_row++;
+			time_until_next = 400/next_in_a_row;
+		}
+	}
+	else
+	if (spGetInput()->axis[1] > 0 && selected < opk_count-1)
+	{
+		if (time_until_next <= 0)
+		{
+			selected++;
+			next_in_a_row++;
+			time_until_next = 400/next_in_a_row;
+		}
+	}
+	else
+	{
+		time_until_next = 0;
+		next_in_a_row = 0;
+	}
 	if (spGetInput()->button[SP_BUTTON_SELECT])
 		return 1;
 	return 0;
