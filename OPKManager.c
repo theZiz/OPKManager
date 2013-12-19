@@ -38,6 +38,7 @@ SDL_Surface* listSurface = NULL;
 SDL_Surface* sdcard_surface;
 SDL_Surface* internal_surface;
 SDL_Surface* web_surface;
+SDL_Surface* update_surface;
 spFontPointer font = NULL;
 spFontPointer font_small = NULL;
 
@@ -91,7 +92,17 @@ void draw( void )
 			spRectangle(0,1+(offset+i)*font->maxheight,0,screen->w-2,font->maxheight,SELECTED_BACKGROUND_COLOR);
 		}
 		int sdcard = 0, internal = 0, web = 0;
+		int sdcard_u = 0, internal_u = 0, web_u = 0;
 		pSourceList source = opk->sources;
+		Sint64 oldest = (Uint64)(-1);
+		while (source)
+		{
+			if (source->version < oldest)
+				oldest = source->version;
+			source = source->next;
+		}
+
+		source = opk->sources;
 		while (source)
 		{
 			switch (source->location)
@@ -100,14 +111,27 @@ void draw( void )
 				case 1: sdcard = 1; break;
 				case 2: web = 1; break;
 			}
+			if (oldest < source->version)
+				switch (source->location)
+				{
+					case 0: internal_u = 1; break;
+					case 1: sdcard_u = 1; break;
+					case 2: web_u = 1; break;
+				}
 			source = source->next;
 		}
 		if (internal)
 			spBlitSurface(2+0*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,internal_surface);
+		if (internal_u)
+			spBlitSurface(2+0*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
 		if (sdcard)
 			spBlitSurface(2+1*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,sdcard_surface);
+		if (sdcard_u)
+			spBlitSurface(2+1*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
 		if (web)
 			spBlitSurface(2+2*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,web_surface);
+		if (web_u)
+			spBlitSurface(2+2*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
 		spSetVerticalOrigin(SP_CENTER);
 		spSetHorizontalOrigin(SP_CENTER);
 		spFontDraw(2+3*16,1+(offset+i)*font->maxheight,0,opk->longName,font);
@@ -139,8 +163,8 @@ void draw( void )
 	int way = 7;
 	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,internal_surface);
 	way+=7;
-	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": internal space  ",font);
-	way+=spFontWidth(": internal space ",font);
+	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": internal  ",font);
+	way+=spFontWidth(": internal  ",font);
 	way+=7;
 	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,sdcard_surface);
 	way+=7;
@@ -149,8 +173,13 @@ void draw( void )
 	way+=7;
 	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,web_surface);
 	way+=7;
-	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": in the repository  ",font);
-	way+=spFontWidth(": int the repository  ",font);
+	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": repository  ",font);
+	way+=spFontWidth(": repository  ",font);
+	way+=7;
+	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,update_surface);
+	way+=7;
+	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": newer version  ",font);
+	way+=spFontWidth(": newer version  ",font);
 	spFontDrawMiddle(1*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[a]: Copy",font_small);
 	spFontDrawMiddle(3*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[d]: Move",font_small);
 	spFontDrawMiddle(5*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[w]: Install",font_small);
@@ -257,6 +286,7 @@ int main(int argc, char **argv)
 	sdcard_surface = spLoadSurface("./data/sdcard.png");
 	internal_surface = spLoadSurface("./data/internal.png");
 	web_surface = spLoadSurface("./data/web.png");
+	update_surface = spLoadSurface("./data/update.png");
 	spSetZSet(0);
 	spSetZTest(0);
 	info("Searching internal packages...");
@@ -275,6 +305,7 @@ int main(int argc, char **argv)
 	spDeleteSurface(sdcard_surface);
 	spDeleteSurface(internal_surface);
 	spDeleteSurface(web_surface);
+	spDeleteSurface(update_surface);
 	spQuitCore();
 	return 0;
 }
