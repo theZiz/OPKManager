@@ -72,6 +72,8 @@ void info(char* buffer)
 	spFlip();
 }
 
+int offset = 0;
+
 void draw( void )
 {
 	//filling the list
@@ -85,11 +87,11 @@ void draw( void )
 		{
 			spSetVerticalOrigin(SP_TOP);
 			spSetHorizontalOrigin(SP_LEFT);			
-			spRectangle(1,1+i*font->maxheight,0,screen->w-2,font->maxheight,SELECTED_BACKGROUND_COLOR);
+			spRectangle(0,1+(offset+i)*font->maxheight,0,screen->w-2,font->maxheight,SELECTED_BACKGROUND_COLOR);
 			spSetVerticalOrigin(SP_CENTER);
 			spSetHorizontalOrigin(SP_CENTER);
 		}
-		spFontDraw(2,1+i*font->maxheight,0,opk->longName,font);
+		spFontDraw(2,1+(offset+i)*font->maxheight,0,opk->longName,font);
 		i++;
 		opk = opk->next;
 	}	
@@ -116,8 +118,10 @@ int calc(Uint32 steps)
 		if (time_until_next <= 0)
 		{
 			selected--;
+			if ((offset+selected)*font->maxheight < 0)
+				offset++;
 			next_in_a_row++;
-			time_until_next = 400/next_in_a_row;
+			time_until_next = 300/next_in_a_row;
 		}
 	}
 	else
@@ -126,8 +130,10 @@ int calc(Uint32 steps)
 		if (time_until_next <= 0)
 		{
 			selected++;
+			if ((offset+selected+1)*font->maxheight >= listSurface->h)
+				offset--;
 			next_in_a_row++;
-			time_until_next = 400/next_in_a_row;
+			time_until_next = 300/next_in_a_row;
 		}
 	}
 	else
