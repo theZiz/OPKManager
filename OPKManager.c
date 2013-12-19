@@ -94,14 +94,13 @@ void draw( void )
 		int sdcard = 0, internal = 0, web = 0;
 		int sdcard_u = 0, internal_u = 0, web_u = 0;
 		pSourceList source = opk->sources;
-		Sint64 oldest = (Uint64)(-1);
+		Sint64 oldest = 0;
 		while (source)
 		{
-			if (source->version < oldest)
+			if (source->version < oldest || oldest == 0)
 				oldest = source->version;
 			source = source->next;
 		}
-
 		source = opk->sources;
 		while (source)
 		{

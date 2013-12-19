@@ -69,7 +69,7 @@ void add_new_file(char* filename,int kind,char* url,Sint64 version)
 	opk_count++;
 }
 
-void add_file_to_opkList(char* filename,int kind,int version)
+void add_file_to_opkList(char* filename,int kind,Sint64 version)
 {
 	//Searching in the opkList
 	pOpkList file = opkList;
