@@ -24,10 +24,10 @@
 	#define INTERNAL "./test/data"
 	#define SDCARD "./test/sdcard"
 #endif
-#define VERSION "1.0.0"
+#define VERSION "0.1.0"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
-#define FONT_SIZE 10
-#define FONT_SIZE_SMALL 8
+#define FONT_SIZE 12
+#define FONT_SIZE_SMALL 9
 #define FONT_COLOR spGetRGB(48,48,48)
 #define BACKGROUND_COLOR spGetRGB(225,225,160)
 #define LIST_BACKGROUND_COLOR spGetRGB(255,255,180)
@@ -37,6 +37,7 @@ SDL_Surface* screen;
 SDL_Surface* listSurface = NULL;
 SDL_Surface* sdcard_surface;
 SDL_Surface* internal_surface;
+SDL_Surface* web_surface;
 spFontPointer font = NULL;
 spFontPointer font_small = NULL;
 
@@ -105,6 +106,8 @@ void draw( void )
 			spBlitSurface(2+0*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,internal_surface);
 		if (sdcard)
 			spBlitSurface(2+1*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,sdcard_surface);
+		if (web)
+			spBlitSurface(2+2*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,web_surface);
 		spSetVerticalOrigin(SP_CENTER);
 		spSetHorizontalOrigin(SP_CENTER);
 		spFontDraw(2+3*16,1+(offset+i)*font->maxheight,0,opk->longName,font);
@@ -130,9 +133,33 @@ void draw( void )
 	spSetVerticalOrigin(SP_TOP);
 	spSetHorizontalOrigin(SP_LEFT);
 	spBlitSurface( 1, font->maxheight,0,listSurface);
+	spRectangleBorder( 0,font->maxheight,0,listSurface->w+2,listSurface->h+2,1,1,FONT_COLOR);
 	spSetVerticalOrigin(SP_CENTER);
 	spSetHorizontalOrigin(SP_CENTER);
+	int way = 7;
+	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,internal_surface);
+	way+=7;
+	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": internal space  ",font);
+	way+=spFontWidth(": internal space ",font);
+	way+=7;
+	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,sdcard_surface);
+	way+=7;
+	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": sd-card  ",font);
+	way+=spFontWidth(": sdcard  ",font);
+	way+=7;
+	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,web_surface);
+	way+=7;
+	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": in the repository  ",font);
+	way+=spFontWidth(": int the repository  ",font);
+	spFontDrawMiddle(1*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[a]: Copy",font_small);
+	spFontDrawMiddle(3*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[d]: Move",font_small);
+	spFontDrawMiddle(5*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[w]: Install",font_small);
+	spFontDrawMiddle(7*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[q]: Help",font_small);
+	spFontDrawMiddle(9*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[e]: Run",font_small);
 	spFontDraw(0,screen->h-font_small->maxheight,0,"made by Ziz",font_small);
+	spFontDrawMiddle(3*screen->w/10,screen->h-font_small->maxheight,0,"[w]: Delete",font_small);
+	spFontDrawMiddle(5*screen->w/10,screen->h-font_small->maxheight,0,"[S]: Details",font_small);
+	spFontDrawMiddle(7*screen->w/10,screen->h-font_small->maxheight,0,"[E]: Exit",font_small);
 	spFontDrawRight(screen->w,screen->h-font_small->maxheight,0,"Version "VERSION,font_small);
 	spFlip();
 }
@@ -216,7 +243,7 @@ void resize(Uint16 w,Uint16 h)
   if (listSurface)
 		spDeleteSurface(listSurface);
 	listSurface = spCreateSurface(w-2,
-	                              h-font->maxheight-font_small->maxheight);
+	                              h-3*font->maxheight-font_small->maxheight);
 
 }
 
@@ -229,6 +256,7 @@ int main(int argc, char **argv)
 	resize(screen->w,screen->h);
 	sdcard_surface = spLoadSurface("./data/sdcard.png");
 	internal_surface = spLoadSurface("./data/internal.png");
+	web_surface = spLoadSurface("./data/web.png");
 	spSetZSet(0);
 	spSetZTest(0);
 	info("Searching internal packages...");
@@ -246,6 +274,7 @@ int main(int argc, char **argv)
 	spFontDelete(font_small);
 	spDeleteSurface(sdcard_surface);
 	spDeleteSurface(internal_surface);
+	spDeleteSurface(web_surface);
 	spQuitCore();
 	return 0;
 }
