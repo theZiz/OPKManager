@@ -1,0 +1,9 @@
+* Implementing description
+* Searching in USB Sticks
+* Moving
+* Copying
+* Deleting
+* Repository:
+	* Downloading the Website
+	* Parsing for URL, Version, Name and Description
+	* Downloading packages (temp!) + Copying them
