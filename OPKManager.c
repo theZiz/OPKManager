@@ -18,11 +18,9 @@
 #include <sparrow3d.h>
 
 #ifdef X86
-	#define INTERNAL "/media/data/apps"
-	#define SDCARD "/media/sdcard/apps"
+	#define ROOT "/media/"
 #else
-	#define INTERNAL "./test/data"
-	#define SDCARD "./test/sdcard"
+	#define ROOT "./test/"
 #endif
 #define VERSION "0.1.0"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
@@ -44,17 +42,23 @@ spFontPointer font = NULL;
 spFontPointer font_small = NULL;
 #define ONE_HOUR (60*60)
 
+typedef struct sPossibleSourceList *pPossibleSourceList;
+typedef struct sPossibleSourceList {
+	int location; //0 internal, 1 sdcard, 2 internet, 3 usb
+	char* url;
+	pPossibleSourceList next;
+} tPossibleSourcelist;
+
 typedef struct sSourceList *pSourceList;
 typedef struct sSourceList {
 	Sint64 version;
-	int location; //0 internal, 1 sdcard, 2 internet, 3 usb
-	char* url; //with maybe another filename
+	char* fileName;
+	pPossibleSourceList source;
 	pSourceList next;
 } tSourcelist;
 
 typedef struct sOpkList *pOpkList;
 typedef struct sOpkList {
-	char fileName[1024];
 	char longName[1024];
 	char smallLongName[1024];
 	pSourceList sources;
@@ -320,16 +324,22 @@ int main(int argc, char **argv)
 	update_surface = spLoadSurface("./data/update.png");
 	spSetZSet(0);
 	spSetZTest(0);
-	info("Searching internal packages...");
-	spFileListPointer fileList = NULL;
-	spFileGetDirectory(&fileList,INTERNAL,0,1);
-	merge_fileList_to_opkList(fileList,0);
-	spFileDeleteList(fileList);
-	info("Searching sdcard packages...");
-	fileList = NULL;
-	spFileGetDirectory(&fileList,SDCARD,0,1);
-	merge_fileList_to_opkList(fileList,1);
-	spFileDeleteList(fileList);
+	spFileListPointer directoryList = NULL;
+	spFileGetDirectory(&directoryList,ROOT,0,1);
+	int rlen = strlen(ROOT);
+	spFileListPointer directory = directoryList;
+	while (directory)
+	{
+		char* subdir = &(directory->name[rlen+1]);
+		printf("%s\n",subdir);
+		info("Searching packages...");
+		/*spFileListPointer fileList = NULL;
+		spFileGetDirectory(&fileList,INTERNAL,0,1);
+		merge_fileList_to_opkList(fileList,0);
+		spFileDeleteList(fileList);*/
+		directory = directory->next;
+	}
+	spFileDeleteList(directoryList);
 	spLoop( draw, calc, 10, resize, NULL );
 	spFontDelete(font);
 	spFontDelete(font_small);
