@@ -1,8 +1,4 @@
-* Cleaning up!
-* Moving
-* Copying
-* Deleting
-* Repository:
-	* Downloading the Website
-	* Parsing for URL, Version, Name and Description
-	* Downloading packages (temp!) + Copying them
+* Reading the right folder of the sdcard (/proc/1/mounts magic with /dev/mmc*)
+* Cleaning up after program termination
+* First Release
+* Repository stuff...
