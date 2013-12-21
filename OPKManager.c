@@ -79,6 +79,7 @@ int opk_count = 0;
 int show_details = 0;
 int show_copy = 0;
 int show_move = 0;
+int show_delete = 0;
 pLocation from_sel,to_sel;
 pSourceList from_sel_source,to_sel_source;
 
@@ -257,6 +258,17 @@ void draw( void )
 			draw_sure("Are you sure you want to overwrite",buffer,"with",buffer2);
 			break;
 	}
+	switch (show_delete)
+	{
+		case 1:
+			sprintf(buffer,"Delete %s from which location?",sel->longName);
+			draw_selection(buffer,sel,1,NULL);
+			break;
+		case 3:
+			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
+			draw_sure("Are you sure you want to delete",buffer,"","");
+			break;
+	}
 	spFlip();
 }
 
@@ -309,6 +321,9 @@ int calc(Uint32 steps)
 				from_sel_source = source;
 				selection_selection = 0;
 			}
+			else
+			if (result == 0)
+				show_copy = 0;
 			return 0;
 		case 2:
 			result = calc_selection(steps,sel,0,from_sel);
@@ -393,6 +408,9 @@ int calc(Uint32 steps)
 				from_sel_source = source;
 				selection_selection = 0;
 			}
+			else
+			if (result == 0)
+				show_move = 0;
 			return 0;
 		case 2:
 			result = calc_selection(steps,sel,0,from_sel);
@@ -400,7 +418,7 @@ int calc(Uint32 steps)
 				show_move = 0;
 			if (result == 2)
 			{
-				//Copying!
+				//Moving!
 				to_sel = locationList;
 				int i = 0;
 				while (to_sel)
@@ -446,6 +464,54 @@ int calc(Uint32 steps)
 			}
 			return 0;
 	}
+	//DELETING
+	switch (show_delete)
+	{
+		case 1:
+			result = calc_selection(steps,sel,1,NULL);
+			if (result == 2)
+			{
+				show_delete = 3;
+				from_sel = locationList;
+				int i = 0;
+				pSourceList source;
+				while (from_sel)
+				{
+					source = sel->sources;
+					while (source)
+					{
+						if (source->location == from_sel)
+							break;
+						source = source->next;
+					}
+					if (source)
+					{
+						if (selection_selection == i)
+							break;
+						i++;
+					}
+					from_sel = from_sel->next;
+				}
+				from_sel_source = source;
+				selection_selection = 0;
+			}
+			else
+			if (result == 0)
+				show_delete = 0;
+			return 0;
+		case 3:
+			result = calc_sure();
+			if (result != 1)
+			{
+				if (result == 2)
+				{
+					printf("Deleting %s%s\n",from_sel->url,from_sel_source->fileName);					
+					system_delete(sel,from_sel_source);
+				}
+				show_delete = 0;
+			}
+			return 0;
+	}
 	if (spGetInput()->button[SP_BUTTON_START_NOWASD])
 	{
 		spGetInput()->button[SP_BUTTON_START_NOWASD] = 0;
@@ -475,6 +541,32 @@ int calc(Uint32 steps)
 			from_sel_source = sel->sources;
 			from_sel = sel->sources->location;
 			show_copy = 2;
+			return 0;
+		}
+	}
+	if (spGetInput()->button[SP_BUTTON_UP_NOWASD])
+	{
+		spGetInput()->button[SP_BUTTON_UP_NOWASD] = 0;
+		pSourceList source = sel->sources;
+		int source_count = 0;
+		while (source)
+		{
+			source_count++;
+			source = source->next;
+		}
+		if (source_count > 1)
+		{
+			selection_selection = 0;
+			show_delete = 1;
+			return 0;
+		}
+		else
+		if (source_count == 1)
+		{
+			selection_selection = 0;
+			from_sel_source = sel->sources;
+			from_sel = sel->sources->location;
+			show_delete = 3;
 			return 0;
 		}
 	}

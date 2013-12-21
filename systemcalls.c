@@ -52,3 +52,49 @@ void system_move_new(pOpkList opkFile,pSourceList from_source,pLocation new_loca
 	system(buffer);
 	from_source->location = new_location;
 }
+
+void system_delete(pOpkList opkFile,pSourceList from_source)
+{
+	char buffer[2048];
+	sprintf(buffer,"rm %s%s",from_source->location->url,from_source->fileName);
+	system(buffer);
+	//Removing the source
+	pSourceList source = opkFile->sources;
+	pSourceList before = NULL;
+	while (source)
+	{
+		if (source == from_source)
+			break;
+		before = source;
+		source = source->next;
+	}
+	if (before)
+		before->next = from_source->next;
+	else
+		opkFile->sources = from_source->next;
+	free(from_source->fileName);
+	free(from_source->description);
+	spDeleteTextBlock(from_source->block);
+	free(from_source);
+	//Deleting opkFile, when sources are empty
+	if (opkFile->sources == NULL)
+	{
+		pOpkList opk = opkList;
+		pOpkList before = NULL;
+		while (opk)
+		{
+			if (opk == opkFile)
+				break;
+			before = opk;
+			opk = opk->next;
+		}
+		if (before)
+			before->next = opkFile->next;
+		else
+			opkList = opkFile->next;
+		if (opkFile->next == NULL) //was last
+			selected--;
+		opk_count--;
+		free(opkFile);
+	}
+}
