@@ -14,32 +14,66 @@
   * 
   * For feedback and questions about my Files and Projects please mail me,
   * Alexander Matthes (Ziz) , zizsdl_at_googlemail.com */
+  
+void read_locations()
+{
+	spFileListPointer directoryList = NULL;
+	spFileGetDirectory(&directoryList,ROOT,0,1);
+	int rlen = strlen(ROOT);
+	spFileListPointer directory = directoryList;
+	while (directory)
+	{
+		pLocation loc = (pLocation)malloc(sizeof(tLocation));
+		if (strcmp(directory->name,ROOT"/data") == 0)
+			loc->kind = 0;
+		else
+		if (strcmp(directory->name,ROOT"/sdcard") == 0)
+			loc->kind = 1;
+		else
+			loc->kind = 3;
+		loc->url = (char*)malloc(strlen(directory->name)+6);
+		sprintf(loc->url,"%s/apps",directory->name);
+		printf("Found %s\n",loc->url);
+		loc->next = locationList;
+		locationList = loc;
+		directory = directory->next;
+	}
+	spFileDeleteList(directoryList);
+}
 
-void add_new_source(pOpkList file,int kind,char* url,Sint64 version)
+void add_new_source(pOpkList file,pLocation location,char* filename,Sint64 version,char* description)
 {
 	pSourceList newSource = (pSourceList)malloc(sizeof(tSourcelist));
 	newSource->version = version;
-	newSource->location = kind;
-	if (url)
+	newSource->location = location;
+	if (filename)
 	{
-		int l = strlen(url)+1;
-		newSource->url = (char*)malloc(l);
-		memcpy(newSource->url,url,l);
+		int l = strlen(filename)+1;
+		newSource->fileName = (char*)malloc(l);
+		memcpy(newSource->fileName,filename,l);
 	}
 	else
-		url = NULL;
+		newSource->fileName = NULL;
+	if (description)
+	{
+		int l = strlen(description)+1;
+		newSource->description = (char*)malloc(l);
+		memcpy(newSource->description,description,l);
+		newSource->block = spCreateTextBlock(description,screen->w/2,font);
+	}
+	else
+	{
+		newSource->description = NULL;
+		newSource->block = NULL;
+	}
 	newSource->next = file->sources;
 	file->sources = newSource;
 }
 
-void add_new_file(char* filename,int kind,char* url,Sint64 version)
+void add_new_file(char* longname,char* filename,pLocation location,Sint64 version,char* description)
 {
 	pOpkList newOpk = (pOpkList)malloc(sizeof(tOpkList));
-	sprintf(newOpk->fileName,"%s",filename);
-	sprintf(newOpk->longName,"%s",filename);
-	int l = strlen(newOpk->longName);
-	if (l > 4)
-		newOpk->longName[l-4] = 0;
+	sprintf(newOpk->longName,"%s",longname);
 	int i;
 	for (i = 0; newOpk->longName[i] != 0; i++)
 	{
@@ -50,7 +84,7 @@ void add_new_file(char* filename,int kind,char* url,Sint64 version)
 	}
 	newOpk->smallLongName[i] = 0;
 	newOpk->sources = NULL;
-	add_new_source(newOpk,kind,url,version);
+	add_new_source(newOpk,location,filename,version,description);
 	//Searching the first, which is bigger
 	pOpkList bigger = opkList;
 	pOpkList smaller = NULL;
@@ -69,23 +103,23 @@ void add_new_file(char* filename,int kind,char* url,Sint64 version)
 	opk_count++;
 }
 
-void add_file_to_opkList(char* filename,int kind,Sint64 version)
+void add_file_to_opkList(char* longname,char* filename,pLocation location,Sint64 version,char* description)
 {
 	//Searching in the opkList
 	pOpkList file = opkList;
 	while (file)
 	{
-		if (strcmp(file->fileName,filename) == 0)
+		if (strcmp(file->longName,longname) == 0)
 			break;
 		file = file->next;
 	}
 	if (file) //found
-		add_new_source(file,kind,NULL,version);
+		add_new_source(file,location,filename,version,description);
 	else
-		add_new_file(filename,kind,NULL,version);
+		add_new_file(longname,filename,location,version,description);
 }
 
-void merge_fileList_to_opkList(spFileListPointer fileList,int kind)
+void merge_fileList_to_opkList(spFileListPointer fileList,pLocation location)
 {
 	spFileListPointer file = fileList;
 	while (file)
@@ -96,7 +130,51 @@ void merge_fileList_to_opkList(spFileListPointer fileList,int kind)
 			if (file->name[i] == '/')
 				break;
 		char* filename = &(file->name[i+1]);
-		add_file_to_opkList(filename,kind,file->last_mod);
+		struct OPK* opkFile = opk_open(file->name);
+		char* longname = NULL;
+		char* description = NULL;
+		const char* metaname;
+		opk_open_metadata(opkFile, &metaname);
+		const char *key, *val;
+		size_t skey, sval;
+		while(opk_read_pair(opkFile, &key, &skey, &val, &sval) && key)
+		{
+			char key_string[256];
+			sprintf(key_string,"%.*s",(int)skey,key);
+			if (strcmp(key_string,"Name") == 0)
+			{
+				longname = (char*)malloc(sval+1);
+				memcpy(longname,val,sval);
+				longname[sval] = 0;
+				printf("Loading %s\n",longname);
+			}
+			if (strcmp(key_string,"Comment") == 0)
+			{
+				description = (char*)malloc(sval+1);
+				memcpy(description,val,sval);
+				description[sval] = 0;
+			}
+		}
+		opk_close(opkFile);
+		if (longname == NULL)
+		{
+			longname = (char*)malloc(strlen("Error while reading applications name!")+1);
+			sprintf(longname,"Error while reading applications name!");
+		}
+		add_file_to_opkList(longname,filename,location,file->last_mod,description);
 		file = file->next;
 	}
+}
+
+void add_all_locations()
+{
+	pLocation loc = locationList;
+	while (loc)
+	{
+		spFileListPointer fileList = NULL;
+		spFileGetDirectory(&fileList,loc->url,0,1);
+		merge_fileList_to_opkList(fileList,loc);
+		spFileDeleteList(fileList);
+		loc = loc->next;
+	}	
 }

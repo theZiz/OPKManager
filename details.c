@@ -21,31 +21,44 @@ void draw_details(pOpkList sel)
 	spInterpolateTargetToColor(0,SP_ONE/2);
 	spRectangle(screen->w/2,screen->h/2,0,screen->w*5/6,screen->h*5/6,LIST_BACKGROUND_COLOR);
 	spRectangleBorder(screen->w/2,screen->h/2,0,screen->w*5/6+2,screen->h*5/6+2,1,1,FONT_COLOR);
-	int y = 2;
-	spFontDrawRight(screen->w*7/20,y*screen->h/14,0,"Package:",font);
-	spFontDraw     (screen->w*8/20,y*screen->h/14,0,sel->longName,font);
-	y++;
-	spFontDrawRight(screen->w*7/20,y*screen->h/14,0,"Version:",font);
+	int distance = screen->h/14;
+	int y = 2*distance;
+	spFontDrawRight(screen->w*7/20,y,0,"Package:",font);
+	spFontDraw     (screen->w*8/20,y,0,sel->longName,font);
+	y+=distance;
+	spFontDrawRight(screen->w*7/20,y,0,"Version:",font);
 	pSourceList source = sel->sources;
+	spTextBlockPointer block = NULL;
 	while (source)
 	{
-		switch (source->location)
+		switch (source->location->kind)
 		{
-			case 0: spBlitSurface(screen->w*8/20+7,y*screen->h/14+7,0,internal_surface); break;
-			case 1: spBlitSurface(screen->w*8/20+7,y*screen->h/14+7,0,sdcard_surface); break;
-			case 2: spBlitSurface(screen->w*8/20+7,y*screen->h/14+7,0,web_surface); break;
-			case 3: spBlitSurface(screen->w*8/20+7,y*screen->h/14+7,0,usb_surface); break;
+			case 0: spBlitSurface(screen->w*8/20+7,y+7,0,internal_surface); break;
+			case 1: spBlitSurface(screen->w*8/20+7,y+7,0,sdcard_surface); break;
+			case 2: spBlitSurface(screen->w*8/20+7,y+7,0,web_surface); break;
+			case 3: spBlitSurface(screen->w*8/20+7,y+7,0,usb_surface); break;
 		}
-		spFontDraw     (screen->w*8/20+14,y*screen->h/14,0,ctime((time_t*)&(source->version)),font);
-		y++;
+		//struct tm* myTime = gmtime ((time_t*)&(source->version));
+		//sprintf(buffer,"%i.%i.%i %i:%i",myTime->tm_mday,myTime->tm_mon+1,myTime->tm_year+1900,myTime->tm_hour,myTime->tm_min);
+		//spFontDraw     (screen->w*8/20+14,y,0,buffer,font);
+		spFontDraw     (screen->w*8/20+14,y,0,ctime((time_t*)&(source->version)),font);
+		y+=distance/2;
+		sprintf(buffer,"Filename: \"%s\"",source->fileName);
+		spFontDraw     (screen->w*8/20,y+5,0,buffer,font_small);
+		y+=distance;
+		if (source->block)
+			block = source->block;
 		source = source->next;
 	}
-	spFontDrawRight(screen->w*7/20,y*screen->h/14,0,"Filename:",font);
-	spFontDraw     (screen->w*8/20,y*screen->h/14,0,sel->fileName,font);
-	y++;
-	spFontDrawRight(screen->w*7/20,y*screen->h/14,0,"Description:",font);
-	spFontDraw     (screen->w*8/20,y*screen->h/14,0,"ToDo",font);
-	y++;
+	spFontDrawRight(screen->w*7/20,y,0,"Filename:",font);
+	//spFontDraw     (screen->w*8/20,y*screen->h/14,0,sel->fileName,font);
+	y+=distance;
+	if (block)
+	{
+		spFontDrawRight(screen->w*7/20,y,0,"Description:",font);
+		spFontDrawTextBlock(SP_LEFT,screen->w*8/20,y,0,block,screen->h*13/16-y,0,font);
+	}
+	y+=distance;
 
 	spFontDrawMiddle(screen->w/2,screen->h*13/16,0,"[S] Back",font);
 }

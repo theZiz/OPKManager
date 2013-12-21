@@ -16,11 +16,12 @@
   * Alexander Matthes (Ziz) , zizsdl_at_googlemail.com */
 
 #include <sparrow3d.h>
+#include <opk.h>
 
 #ifdef X86
-	#define ROOT "/media/"
+	#define ROOT "/media"
 #else
-	#define ROOT "./test/"
+	#define ROOT "./test"
 #endif
 #define VERSION "0.1.0"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
@@ -42,18 +43,20 @@ spFontPointer font = NULL;
 spFontPointer font_small = NULL;
 #define ONE_HOUR (60*60)
 
-typedef struct sPossibleSourceList *pPossibleSourceList;
-typedef struct sPossibleSourceList {
-	int location; //0 internal, 1 sdcard, 2 internet, 3 usb
-	char* url;
-	pPossibleSourceList next;
-} tPossibleSourcelist;
+typedef struct sLocation *pLocation;
+typedef struct sLocation {
+	int kind; //0 internal, 1 sdcard, 2 internet, 3 usb
+	char* url; //according to kind something like "/media/data/apps/" or an url
+	pLocation next;
+} tLocation;
 
 typedef struct sSourceList *pSourceList;
 typedef struct sSourceList {
 	Sint64 version;
 	char* fileName;
-	pPossibleSourceList source;
+	char* description;
+	spTextBlockPointer block;
+	pLocation location;
 	pSourceList next;
 } tSourcelist;
 
@@ -65,6 +68,7 @@ typedef struct sOpkList {
 	pOpkList next;
 } tOpkList;
 
+pLocation locationList = NULL;
 pOpkList opkList = NULL;
 int selected = 0;
 int next_in_a_row = 0;
@@ -115,7 +119,7 @@ void draw( void )
 		source = opk->sources;
 		while (source)
 		{
-			switch (source->location)
+			switch (source->location->kind)
 			{
 				case 0: internal = 1; break;
 				case 1: sdcard = 1; break;
@@ -123,7 +127,7 @@ void draw( void )
 				case 3: usb = 1; break;
 			}
 			if (oldest+ONE_HOUR < source->version)
-				switch (source->location)
+				switch (source->location->kind)
 				{
 					case 0: internal_u = 1; break;
 					case 1: sdcard_u = 1; break;
@@ -171,45 +175,45 @@ void draw( void )
 	spSelectRenderTarget(spGetWindowSurface());
 	spClearTarget( BACKGROUND_COLOR );
 	spFontDrawMiddle(screen->w/2,0,0,"OPKManager",font);
-	spSetVerticalOrigin(SP_TOP);
-	spSetHorizontalOrigin(SP_LEFT);
-	spBlitSurface( 1, font->maxheight,0,listSurface);
-	spRectangleBorder( 0,font->maxheight,0,listSurface->w+2,listSurface->h+2,1,1,FONT_COLOR);
-	spSetVerticalOrigin(SP_CENTER);
-	spSetHorizontalOrigin(SP_CENTER);
 	int way = 7;
-	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,internal_surface);
+	spBlitSurface(way,3*font->maxheight/2,0,internal_surface);
 	way+=7;
-	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": internal ",font);
+	spFontDraw(way,font->maxheight,0,": internal ",font);
 	way+=spFontWidth(": internal ",font);
 	way+=7;
-	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,sdcard_surface);
+	spBlitSurface(way,3*font->maxheight/2,0,sdcard_surface);
 	way+=7;
-	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": sd-card  ",font);
+	spFontDraw(way,font->maxheight,0,": sd-card  ",font);
 	way+=spFontWidth(": sdcard  ",font);
 	way+=7;
-	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,usb_surface);
+	spBlitSurface(way,3*font->maxheight/2,0,usb_surface);
 	way+=7;
-	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": usb ",font);
+	spFontDraw(way,font->maxheight,0,": usb ",font);
 	way+=spFontWidth(": usb  ",font);
 	way+=7;
-	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,web_surface);
+	spBlitSurface(way,3*font->maxheight/2,0,web_surface);
 	way+=7;
-	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": repository ",font);
+	spFontDraw(way,font->maxheight,0,": repository ",font);
 	way+=spFontWidth(": repository ",font);
 	way+=7;
-	spBlitSurface(way,screen->h-font_small->maxheight-3*font->maxheight/2+1,0,update_surface);
+	spBlitSurface(way,3*font->maxheight/2,0,update_surface);
 	way+=7;
-	spFontDraw(way,screen->h-font_small->maxheight-2*font->maxheight+1,0,": newer version",font);
-	spFontDrawMiddle(1*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[a]: Copy",font_small);
-	spFontDrawMiddle(3*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[d]: Move",font_small);
-	spFontDrawMiddle(5*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[w]: Install",font_small);
-	spFontDrawMiddle(7*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[q]: Update",font_small);
-	spFontDrawMiddle(9*screen->w/10,screen->h-font_small->maxheight-(font->maxheight+font_small->maxheight)/2,0,"[e]: Run",font_small);
+	spFontDraw(way,font->maxheight,0,": newer version",font);	spSetVerticalOrigin(SP_TOP);
+	spSetHorizontalOrigin(SP_LEFT);
+	spBlitSurface( 1, font->maxheight*2,0,listSurface);
+	spRectangleBorder( 0,font->maxheight*2,0,listSurface->w+2,listSurface->h+2,1,1,FONT_COLOR);
+	spSetVerticalOrigin(SP_CENTER);
+	spSetHorizontalOrigin(SP_CENTER);
+
+	spFontDrawMiddle(1*screen->w/10,screen->h-2*font->maxheight,0,"[a]: Copy",font_small);
+	spFontDrawMiddle(3*screen->w/10,screen->h-2*font->maxheight,0,"[d]: Move",font_small);
+	spFontDrawMiddle(5*screen->w/10,screen->h-2*font->maxheight,0,"[w]: Install",font_small);
+	spFontDrawMiddle(7*screen->w/10,screen->h-2*font->maxheight,0,"[q]: Update",font_small);
+	spFontDrawMiddle(9*screen->w/10,screen->h-2*font->maxheight,0,"[e]: Run",font_small);
 	spFontDraw(0,screen->h-font_small->maxheight,0,"made by Ziz",font_small);
-	spFontDrawMiddle(3*screen->w/10,screen->h-font_small->maxheight,0,"[w]: Delete",font_small);
-	spFontDrawMiddle(5*screen->w/10,screen->h-font_small->maxheight,0,"[S]: Details",font_small);
-	spFontDrawMiddle(7*screen->w/10,screen->h-font_small->maxheight,0,"[E]: Exit",font_small);
+	spFontDrawMiddle(3*screen->w/10,screen->h-font->maxheight,0,"[w]: Delete",font_small);
+	spFontDrawMiddle(5*screen->w/10,screen->h-font->maxheight,0,"[S]: Details",font_small);
+	spFontDrawMiddle(7*screen->w/10,screen->h-font->maxheight,0,"[E]: Exit",font_small);
 	spFontDrawRight(screen->w,screen->h-font_small->maxheight,0,"Version "VERSION,font_small);
 	if (show_details)
 		draw_details(sel);
@@ -306,7 +310,7 @@ void resize(Uint16 w,Uint16 h)
   if (listSurface)
 		spDeleteSurface(listSurface);
 	listSurface = spCreateSurface(w-2,
-	                              h-3*font->maxheight-font_small->maxheight);
+	                              h-1*font->maxheight-4*font_small->maxheight);
 
 }
 
@@ -324,22 +328,10 @@ int main(int argc, char **argv)
 	update_surface = spLoadSurface("./data/update.png");
 	spSetZSet(0);
 	spSetZTest(0);
-	spFileListPointer directoryList = NULL;
-	spFileGetDirectory(&directoryList,ROOT,0,1);
-	int rlen = strlen(ROOT);
-	spFileListPointer directory = directoryList;
-	while (directory)
-	{
-		char* subdir = &(directory->name[rlen+1]);
-		printf("%s\n",subdir);
-		info("Searching packages...");
-		/*spFileListPointer fileList = NULL;
-		spFileGetDirectory(&fileList,INTERNAL,0,1);
-		merge_fileList_to_opkList(fileList,0);
-		spFileDeleteList(fileList);*/
-		directory = directory->next;
-	}
-	spFileDeleteList(directoryList);
+	read_locations();
+	info("Searching local packages...");
+	add_all_locations();
+
 	spLoop( draw, calc, 10, resize, NULL );
 	spFontDelete(font);
 	spFontDelete(font_small);
