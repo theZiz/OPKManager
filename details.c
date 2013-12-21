@@ -60,14 +60,15 @@ void draw_details(pOpkList sel)
 	}
 	y+=distance;
 
-	spFontDrawMiddle(screen->w/2,screen->h*13/16,0,"[S] Back",font);
+	spFontDrawMiddle(screen->w/2,screen->h*13/16,0,"[o] or [c] Back",font);
 }
 
 int calc_details()
 {
-	if (spGetInput()->button[SP_BUTTON_START_NOWASD])
+	if (spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] || spGetInput()->button[SP_PRACTICE_OK_NOWASD])
 	{
-		spGetInput()->button[SP_BUTTON_START_NOWASD] = 0;
+		spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] = 0;
+		spGetInput()->button[SP_PRACTICE_OK_NOWASD] = 0;
 		return 0;
 	}
 	return 1;

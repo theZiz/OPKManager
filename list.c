@@ -25,14 +25,23 @@ void read_locations()
 	{
 		pLocation loc = (pLocation)malloc(sizeof(tLocation));
 		if (strcmp(directory->name,ROOT"/data") == 0)
+		{
+			sprintf(loc->name,"Internal");
 			loc->kind = 0;
+		}
 		else
 		if (strcmp(directory->name,ROOT"/sdcard") == 0)
+		{
+			sprintf(loc->name,"SD Card");
 			loc->kind = 1;
+		}
 		else
+		{
+			sprintf(loc->name,"USB Device");			
 			loc->kind = 3;
-		loc->url = (char*)malloc(strlen(directory->name)+6);
-		sprintf(loc->url,"%s/apps",directory->name);
+		}
+		loc->url = (char*)malloc(strlen(directory->name)+7);
+		sprintf(loc->url,"%s/apps/",directory->name);
 		printf("Found %s\n",loc->url);
 		loc->next = locationList;
 		locationList = loc;

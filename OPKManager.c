@@ -45,6 +45,7 @@ spFontPointer font_small = NULL;
 
 typedef struct sLocation *pLocation;
 typedef struct sLocation {
+	char name[256];
 	int kind; //0 internal, 1 sdcard, 2 internet, 3 usb
 	char* url; //according to kind something like "/media/data/apps/" or an url
 	pLocation next;
@@ -76,9 +77,13 @@ int time_until_next = 0;
 int opk_count = 0;
 
 int show_details = 0;
+int show_copy = 0;
+pLocation from_sel;
+pSourceList from_sel_source;
 
 #include "list.c"
 #include "details.c"
+#include "selection.c"
 
 void info(char* buffer)
 {
@@ -217,6 +222,11 @@ void draw( void )
 	spFontDrawRight(screen->w,screen->h-font_small->maxheight,0,"Version "VERSION,font_small);
 	if (show_details)
 		draw_details(sel);
+	switch (show_copy)
+	{
+		case 1: draw_selection("From which location?",sel,1,NULL); break;
+		case 2: draw_selection("To which location?",sel,0,from_sel); break;
+	}
 	spFlip();
 }
 
@@ -227,11 +237,116 @@ int calc(Uint32 steps)
 		show_details = calc_details();
 		return 0;
 	}
+	pOpkList opk = opkList;
+	pOpkList sel = NULL;
+	int i = 0;
+	while (opk)
+	{
+		if (i == selected)
+			sel = opk;
+		i++;
+		opk = opk->next;
+	}
+	int result;
+	switch (show_copy)
+	{
+		case 1:
+			result = calc_selection(steps,sel,1,NULL);
+			if (result == 2)
+			{
+				show_copy = 2;
+				from_sel = locationList;
+				int i = 0;
+				pSourceList source;
+				while (from_sel)
+				{
+					source = sel->sources;
+					while (source)
+					{
+						if (source->location == from_sel)
+							break;
+						source = source->next;
+					}
+					if (source)
+					{
+						if (selection_selection == i)
+							break;
+						i++;
+					}
+					from_sel = from_sel->next;
+				}
+				from_sel_source = source;
+				selection_selection = 0;
+			}
+			return 0;
+		case 2:
+			result = calc_selection(steps,sel,0,from_sel);
+			if (result == 0)
+				show_copy = 0;
+			if (result == 2)
+			{
+				//Copying!
+				pLocation to_sel = locationList;
+				int i = 0;
+				while (to_sel)
+				{
+					if (to_sel == from_sel)
+					{
+						to_sel = to_sel->next;
+						continue;
+					}
+					if (selection_selection == i)
+						break;
+					i++;
+					to_sel = to_sel->next;
+				}
+				//location allready there?
+				pSourceList source = sel->sources;
+				while (source)
+				{
+					if (source->location == to_sel)
+						break;
+					source = source->next;
+				}
+				if (source)
+					printf("Overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,source->fileName);
+				else
+					printf("Copying from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,from_sel_source->fileName);
+				show_copy = 0;
+			}
+			return 0;
+	}
 	if (spGetInput()->button[SP_BUTTON_START_NOWASD])
 	{
 		spGetInput()->button[SP_BUTTON_START_NOWASD] = 0;
 		show_details = 1;
 		return 0;
+	}
+	if (spGetInput()->button[SP_BUTTON_LEFT_NOWASD])
+	{
+		spGetInput()->button[SP_BUTTON_LEFT_NOWASD] = 0;
+		pSourceList source = sel->sources;
+		int source_count = 0;
+		while (source)
+		{
+			source_count++;
+			source = source->next;
+		}
+		if (source_count > 1)
+		{
+			selection_selection = 0;
+			show_copy = 1;
+			return 0;
+		}
+		else
+		if (source_count == 1)
+		{
+			selection_selection = 0;
+			from_sel_source = sel->sources;
+			from_sel = sel->sources->location;
+			show_copy = 2;
+			return 0;
+		}
 	}
 	if (time_until_next > 0)
 		time_until_next -= steps;
@@ -288,6 +403,8 @@ void resize(Uint16 w,Uint16 h)
 	spFontAddButton( font, 's', SP_BUTTON_DOWN_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 	spFontAddButton( font, 'q', SP_BUTTON_L_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 	spFontAddButton( font, 'e', SP_BUTTON_R_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
+	spFontAddButton( font, 'o', SP_PRACTICE_OK_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
+	spFontAddButton( font, 'c', SP_PRACTICE_CANCEL_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 	spFontAddButton( font, 'S', SP_BUTTON_START_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 	spFontAddButton( font, 'E', SP_BUTTON_SELECT_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 
@@ -304,6 +421,8 @@ void resize(Uint16 w,Uint16 h)
 	spFontAddButton( font_small, 's', SP_BUTTON_DOWN_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 	spFontAddButton( font_small, 'q', SP_BUTTON_L_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 	spFontAddButton( font_small, 'e', SP_BUTTON_R_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
+	spFontAddButton( font_small, 'o', SP_PRACTICE_OK_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
+	spFontAddButton( font_small, 'c', SP_PRACTICE_CANCEL_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 	spFontAddButton( font_small, 'S', SP_BUTTON_START_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 	spFontAddButton( font_small, 'E', SP_BUTTON_SELECT_NOWASD_NAME, spGetRGB(230,230,230), spGetRGB(64,64,64));
 
