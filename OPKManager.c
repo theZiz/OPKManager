@@ -78,12 +78,14 @@ int opk_count = 0;
 
 int show_details = 0;
 int show_copy = 0;
-pLocation from_sel;
-pSourceList from_sel_source;
+int show_move = 0;
+pLocation from_sel,to_sel;
+pSourceList from_sel_source,to_sel_source;
 
 #include "list.c"
 #include "details.c"
 #include "selection.c"
+#include "systemcalls.c"
 
 void info(char* buffer)
 {
@@ -222,10 +224,38 @@ void draw( void )
 	spFontDrawRight(screen->w,screen->h-font_small->maxheight,0,"Version "VERSION,font_small);
 	if (show_details)
 		draw_details(sel);
+	char buffer[256],buffer2[256];
 	switch (show_copy)
 	{
-		case 1: draw_selection("From which location?",sel,1,NULL); break;
-		case 2: draw_selection("To which location?",sel,0,from_sel); break;
+		case 1:
+			sprintf(buffer,"Copy %s from which location?",sel->longName);
+			draw_selection(buffer,sel,1,NULL);
+			break;
+		case 2:
+			sprintf(buffer,"Copy %s to which location?",sel->longName);
+			draw_selection(buffer,sel,0,NULL);
+			break;
+		case 3:
+			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
+			sprintf(buffer2,"%s%s ?",to_sel->url,to_sel_source->fileName);
+			draw_sure("Are you sure you want to overwrite",buffer,"with",buffer2);
+			break;
+	}
+	switch (show_move)
+	{
+		case 1:
+			sprintf(buffer,"Move %s from which location?",sel->longName);
+			draw_selection(buffer,sel,1,NULL);
+			break;
+		case 2:
+			sprintf(buffer,"Move %s to which location?",sel->longName);
+			draw_selection(buffer,sel,0,NULL);
+			break;
+		case 3:
+			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
+			sprintf(buffer2,"%s%s ?",to_sel->url,to_sel_source->fileName);
+			draw_sure("Are you sure you want to overwrite",buffer,"with",buffer2);
+			break;
 	}
 	spFlip();
 }
@@ -248,6 +278,7 @@ int calc(Uint32 steps)
 		opk = opk->next;
 	}
 	int result;
+	//COPYING
 	switch (show_copy)
 	{
 		case 1:
@@ -286,7 +317,7 @@ int calc(Uint32 steps)
 			if (result == 2)
 			{
 				//Copying!
-				pLocation to_sel = locationList;
+				to_sel = locationList;
 				int i = 0;
 				while (to_sel)
 				{
@@ -301,18 +332,117 @@ int calc(Uint32 steps)
 					to_sel = to_sel->next;
 				}
 				//location allready there?
-				pSourceList source = sel->sources;
-				while (source)
+				to_sel_source = sel->sources;
+				while (to_sel_source)
 				{
-					if (source->location == to_sel)
+					if (to_sel_source->location == to_sel)
 						break;
-					source = source->next;
+					to_sel_source = to_sel_source->next;
 				}
-				if (source)
-					printf("Overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,source->fileName);
+				if (to_sel_source)
+					show_copy = 3;
 				else
+				{
 					printf("Copying from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,from_sel_source->fileName);
+					system_copy_new(sel,from_sel_source,to_sel);
+					show_copy = 0;
+				}
+			}
+			return 0;
+		case 3:
+			result = calc_sure();
+			if (result != 1)
+			{
+				if (result == 2)
+				{
+					printf("Overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,to_sel_source->fileName);					
+					system_copy_overwrite(from_sel_source,to_sel_source);
+				}
 				show_copy = 0;
+			}
+			return 0;
+	}
+	//MOVING
+	switch (show_move)
+	{
+		case 1:
+			result = calc_selection(steps,sel,1,NULL);
+			if (result == 2)
+			{
+				show_move = 2;
+				from_sel = locationList;
+				int i = 0;
+				pSourceList source;
+				while (from_sel)
+				{
+					source = sel->sources;
+					while (source)
+					{
+						if (source->location == from_sel)
+							break;
+						source = source->next;
+					}
+					if (source)
+					{
+						if (selection_selection == i)
+							break;
+						i++;
+					}
+					from_sel = from_sel->next;
+				}
+				from_sel_source = source;
+				selection_selection = 0;
+			}
+			return 0;
+		case 2:
+			result = calc_selection(steps,sel,0,from_sel);
+			if (result == 0)
+				show_move = 0;
+			if (result == 2)
+			{
+				//Copying!
+				to_sel = locationList;
+				int i = 0;
+				while (to_sel)
+				{
+					if (to_sel == from_sel)
+					{
+						to_sel = to_sel->next;
+						continue;
+					}
+					if (selection_selection == i)
+						break;
+					i++;
+					to_sel = to_sel->next;
+				}
+				//location allready there?
+				to_sel_source = sel->sources;
+				while (to_sel_source)
+				{
+					if (to_sel_source->location == to_sel)
+						break;
+					to_sel_source = to_sel_source->next;
+				}
+				if (to_sel_source)
+					show_move = 3;
+				else
+				{
+					printf("Moving from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,from_sel_source->fileName);
+					system_move_new(sel,from_sel_source,to_sel);
+					show_move = 0;
+				}
+			}
+			return 0;
+		case 3:
+			result = calc_sure();
+			if (result != 1)
+			{
+				if (result == 2)
+				{
+					printf("Moving overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,to_sel_source->fileName);					
+					system_move_overwrite(from_sel_source,to_sel_source);
+				}
+				show_move = 0;
 			}
 			return 0;
 	}
@@ -345,6 +475,32 @@ int calc(Uint32 steps)
 			from_sel_source = sel->sources;
 			from_sel = sel->sources->location;
 			show_copy = 2;
+			return 0;
+		}
+	}
+	if (spGetInput()->button[SP_BUTTON_RIGHT_NOWASD])
+	{
+		spGetInput()->button[SP_BUTTON_RIGHT_NOWASD] = 0;
+		pSourceList source = sel->sources;
+		int source_count = 0;
+		while (source)
+		{
+			source_count++;
+			source = source->next;
+		}
+		if (source_count > 1)
+		{
+			selection_selection = 0;
+			show_move = 1;
+			return 0;
+		}
+		else
+		if (source_count == 1)
+		{
+			selection_selection = 0;
+			from_sel_source = sel->sources;
+			from_sel = sel->sources->location;
+			show_move = 2;
 			return 0;
 		}
 	}
