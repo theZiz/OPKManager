@@ -31,15 +31,29 @@ void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_loca
 	add_new_source(opkFile,new_location,from_source->fileName,from_source->version,from_source->description);
 }
 
-void system_move_overwrite(pSourceList from_source,pSourceList to_source)
+void system_move_overwrite(pOpkList sel,pSourceList from_source,pSourceList to_source)
 {
 	char buffer[2048];
 	sprintf(buffer,"mv %s%s %s%s",from_source->location->url,from_source->fileName,to_source->location->url,to_source->fileName);
 	system(buffer);
+	
 	from_source->location = to_source->location;
 	free(from_source->fileName);
-	from_source->fileName = to_source->fileName;	
-	from_source->next = to_source->next;
+	from_source->fileName = to_source->fileName;
+	
+	pSourceList before = NULL;
+	pSourceList mom = sel->sources;
+	while (mom)
+	{
+		if (mom == to_source)
+			break;
+		before = mom;
+		mom = mom->next;
+	}
+	if (before)
+		before->next = to_source->next;
+	else
+		sel->sources = to_source->next;
 	free(to_source->description);
 	spDeleteTextBlock(to_source->block);
 	free(to_source);

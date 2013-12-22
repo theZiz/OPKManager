@@ -18,7 +18,7 @@
 int selection_selection = 0;
 
 //show: 0 all, 1 only available, 2 only unavailable
-void draw_selection(char* caption,pOpkList sel, int show, pLocation except_location)
+void draw_selection(char* caption,pOpkList sel, int show, pLocation except_location,int with_web)
 {
 	char buffer[256];
 	spInterpolateTargetToColor(0,SP_ONE/2);
@@ -28,7 +28,7 @@ void draw_selection(char* caption,pOpkList sel, int show, pLocation except_locat
 	pSourceList source;
 	while (location)
 	{
-		if (location == except_location)
+		if (location == except_location || (with_web == 0 && location->kind == 2))
 		{
 			location = location->next;
 			continue;
@@ -74,7 +74,7 @@ void draw_selection(char* caption,pOpkList sel, int show, pLocation except_locat
 	int i = 0;
 	while (location)
 	{
-		if (location == except_location)
+		if (location == except_location || (with_web == 0 && location->kind == 2))
 		{
 			location = location->next;
 			continue;
@@ -129,7 +129,7 @@ void draw_selection(char* caption,pOpkList sel, int show, pLocation except_locat
 	spFontDrawMiddle(screen->w/2,y,0,"[o] Select      [c] Cancel",font);
 }
 
-int calc_selection(int steps,pOpkList sel, int show, pLocation except_location)
+int calc_selection(int steps,pOpkList sel, int show, pLocation except_location,int with_web)
 {
 	//counting locations
 	pLocation location = locationList;
@@ -137,7 +137,7 @@ int calc_selection(int steps,pOpkList sel, int show, pLocation except_location)
 	pSourceList source;
 	while (location)
 	{
-		if (location == except_location)
+		if (location == except_location || (with_web == 0 && location->kind == 2))
 		{
 			location = location->next;
 			continue;

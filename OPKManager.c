@@ -48,6 +48,7 @@ typedef struct sLocation {
 	char name[256];
 	int kind; //0 internal, 1 sdcard, 2 internet, 3 usb
 	char* url; //according to kind something like "/media/data/apps/" or an url
+	char* update_call;
 	pLocation next;
 } tLocation;
 
@@ -58,6 +59,7 @@ typedef struct sSourceList {
 	char* description;
 	spTextBlockPointer block;
 	pLocation location;
+	char* url_addition;
 	pSourceList next;
 } tSourcelist;
 
@@ -78,6 +80,7 @@ int opk_count = 0;
 
 int show_details = 0;
 int show_copy = 0;
+int copy_is_install;
 int show_move = 0;
 int show_delete = 0;
 pLocation from_sel,to_sel;
@@ -213,11 +216,10 @@ void draw( void )
 	spSetVerticalOrigin(SP_CENTER);
 	spSetHorizontalOrigin(SP_CENTER);
 
-	spFontDrawMiddle(1*screen->w/10,screen->h-2*font->maxheight,0,"[a]: Copy",font_small);
-	spFontDrawMiddle(3*screen->w/10,screen->h-2*font->maxheight,0,"[d]: Move",font_small);
-	spFontDrawMiddle(5*screen->w/10,screen->h-2*font->maxheight,0,"[w]: Install",font_small);
-	spFontDrawMiddle(7*screen->w/10,screen->h-2*font->maxheight,0,"[q]: Update",font_small);
-	spFontDrawMiddle(9*screen->w/10,screen->h-2*font->maxheight,0,"[e]: Run",font_small);
+	spFontDrawMiddle(1*screen->w/8,screen->h-2*font->maxheight,0,"[a]: Copy/Install",font_small);
+	spFontDrawMiddle(3*screen->w/8,screen->h-2*font->maxheight,0,"[d]: Move",font_small);
+	spFontDrawMiddle(5*screen->w/8,screen->h-2*font->maxheight,0,"[q]: Update",font_small);
+	spFontDrawMiddle(7*screen->w/8,screen->h-2*font->maxheight,0,"[e]: Run",font_small);
 	spFontDraw(0,screen->h-font_small->maxheight,0,"made by Ziz",font_small);
 	spFontDrawMiddle(3*screen->w/10,screen->h-font->maxheight,0,"[w]: Delete",font_small);
 	spFontDrawMiddle(5*screen->w/10,screen->h-font->maxheight,0,"[S]: Details",font_small);
@@ -229,12 +231,18 @@ void draw( void )
 	switch (show_copy)
 	{
 		case 1:
-			sprintf(buffer,"Copy %s from which location?",sel->longName);
-			draw_selection(buffer,sel,1,NULL);
+			if (copy_is_install)
+				sprintf(buffer,"Copy/Install %s from which location?",sel->longName);
+			else
+				sprintf(buffer,"Copy %s from which location?",sel->longName);
+			draw_selection(buffer,sel,1,NULL,1);
 			break;
 		case 2:
-			sprintf(buffer,"Copy %s to which location?",sel->longName);
-			draw_selection(buffer,sel,0,NULL);
+			if (copy_is_install)
+				sprintf(buffer,"Install %s to which location?",sel->longName);
+			else
+				sprintf(buffer,"Copy %s to which location?",sel->longName);
+			draw_selection(buffer,sel,0,from_sel,0);
 			break;
 		case 3:
 			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
@@ -246,11 +254,11 @@ void draw( void )
 	{
 		case 1:
 			sprintf(buffer,"Move %s from which location?",sel->longName);
-			draw_selection(buffer,sel,1,NULL);
+			draw_selection(buffer,sel,1,NULL,0);
 			break;
 		case 2:
 			sprintf(buffer,"Move %s to which location?",sel->longName);
-			draw_selection(buffer,sel,0,NULL);
+			draw_selection(buffer,sel,0,from_sel,0);
 			break;
 		case 3:
 			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
@@ -262,7 +270,7 @@ void draw( void )
 	{
 		case 1:
 			sprintf(buffer,"Delete %s from which location?",sel->longName);
-			draw_selection(buffer,sel,1,NULL);
+			draw_selection(buffer,sel,1,NULL,0);
 			break;
 		case 3:
 			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
@@ -294,7 +302,7 @@ int calc(Uint32 steps)
 	switch (show_copy)
 	{
 		case 1:
-			result = calc_selection(steps,sel,1,NULL);
+			result = calc_selection(steps,sel,1,NULL,1);
 			if (result == 2)
 			{
 				show_copy = 2;
@@ -319,6 +327,10 @@ int calc(Uint32 steps)
 					from_sel = from_sel->next;
 				}
 				from_sel_source = source;
+				if (from_sel->kind == 2)
+					copy_is_install = 1;
+				else
+					copy_is_install = 0;
 				selection_selection = 0;
 			}
 			else
@@ -326,7 +338,7 @@ int calc(Uint32 steps)
 				show_copy = 0;
 			return 0;
 		case 2:
-			result = calc_selection(steps,sel,0,from_sel);
+			result = calc_selection(steps,sel,0,from_sel,0);
 			if (result == 0)
 				show_copy = 0;
 			if (result == 2)
@@ -336,7 +348,7 @@ int calc(Uint32 steps)
 				int i = 0;
 				while (to_sel)
 				{
-					if (to_sel == from_sel)
+					if (to_sel == from_sel || to_sel->kind == 2)
 					{
 						to_sel = to_sel->next;
 						continue;
@@ -381,7 +393,7 @@ int calc(Uint32 steps)
 	switch (show_move)
 	{
 		case 1:
-			result = calc_selection(steps,sel,1,NULL);
+			result = calc_selection(steps,sel,1,NULL,0);
 			if (result == 2)
 			{
 				show_move = 2;
@@ -390,6 +402,11 @@ int calc(Uint32 steps)
 				pSourceList source;
 				while (from_sel)
 				{
+					if (from_sel->kind == 2)
+					{
+						from_sel = from_sel->next;
+						continue;
+					}
 					source = sel->sources;
 					while (source)
 					{
@@ -413,7 +430,7 @@ int calc(Uint32 steps)
 				show_move = 0;
 			return 0;
 		case 2:
-			result = calc_selection(steps,sel,0,from_sel);
+			result = calc_selection(steps,sel,0,from_sel,0);
 			if (result == 0)
 				show_move = 0;
 			if (result == 2)
@@ -423,7 +440,7 @@ int calc(Uint32 steps)
 				int i = 0;
 				while (to_sel)
 				{
-					if (to_sel == from_sel)
+					if (to_sel == from_sel || to_sel->kind == 2)
 					{
 						to_sel = to_sel->next;
 						continue;
@@ -458,7 +475,7 @@ int calc(Uint32 steps)
 				if (result == 2)
 				{
 					printf("Moving overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,to_sel_source->fileName);					
-					system_move_overwrite(from_sel_source,to_sel_source);
+					system_move_overwrite(sel,from_sel_source,to_sel_source);
 				}
 				show_move = 0;
 			}
@@ -468,7 +485,7 @@ int calc(Uint32 steps)
 	switch (show_delete)
 	{
 		case 1:
-			result = calc_selection(steps,sel,1,NULL);
+			result = calc_selection(steps,sel,1,NULL,0);
 			if (result == 2)
 			{
 				show_delete = 3;
@@ -477,6 +494,11 @@ int calc(Uint32 steps)
 				pSourceList source;
 				while (from_sel)
 				{
+					if (from_sel->kind == 2)
+					{
+						from_sel = from_sel->next;
+						continue;
+					}
 					source = sel->sources;
 					while (source)
 					{
@@ -518,14 +540,17 @@ int calc(Uint32 steps)
 		show_details = 1;
 		return 0;
 	}
-	if (spGetInput()->button[SP_BUTTON_LEFT_NOWASD])
+	if (spGetInput()->button[SP_BUTTON_LEFT_NOWASD]) //COPY
 	{
 		spGetInput()->button[SP_BUTTON_LEFT_NOWASD] = 0;
 		pSourceList source = sel->sources;
 		int source_count = 0;
+		copy_is_install = 0;
 		while (source)
 		{
 			source_count++;
+			if (source->location->kind == 2)
+				copy_is_install = 1;
 			source = source->next;
 		}
 		if (source_count > 1)
@@ -544,14 +569,15 @@ int calc(Uint32 steps)
 			return 0;
 		}
 	}
-	if (spGetInput()->button[SP_BUTTON_UP_NOWASD])
+	if (spGetInput()->button[SP_BUTTON_UP_NOWASD]) //DELETE
 	{
 		spGetInput()->button[SP_BUTTON_UP_NOWASD] = 0;
 		pSourceList source = sel->sources;
 		int source_count = 0;
 		while (source)
 		{
-			source_count++;
+			if (source->location->kind != 2)
+				source_count++;
 			source = source->next;
 		}
 		if (source_count > 1)
@@ -570,14 +596,15 @@ int calc(Uint32 steps)
 			return 0;
 		}
 	}
-	if (spGetInput()->button[SP_BUTTON_RIGHT_NOWASD])
+	if (spGetInput()->button[SP_BUTTON_RIGHT_NOWASD]) //MOVE
 	{
 		spGetInput()->button[SP_BUTTON_RIGHT_NOWASD] = 0;
 		pSourceList source = sel->sources;
 		int source_count = 0;
 		while (source)
 		{
-			source_count++;
+			if (source->location->kind != 2)
+				source_count++;
 			source = source->next;
 		}
 		if (source_count > 1)
@@ -698,6 +725,7 @@ int main(int argc, char **argv)
 	read_locations();
 	info("Searching local packages...");
 	add_all_locations();
+	update_repositories();
 
 	spLoop( draw, calc, 10, resize, NULL );
 	spFontDelete(font);
