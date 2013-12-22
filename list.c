@@ -29,15 +29,45 @@ void read_locations()
 			loc->kind = 0;
 		}
 		else
-		if (strcmp(directory->name,ROOT"/sdcard") == 0)
 		{
-			sprintf(loc->name,"SD Card");
-			loc->kind = 1;
-		}
-		else
-		{
-			sprintf(loc->name,"USB Device");			
-			loc->kind = 3;
+			//Looking, whether this is an SD Card or not.
+#ifdef X86CPU
+			if (strcmp(directory->name,ROOT"/sdcard") == 0)
+#else
+			FILE *fp = fopen("/proc/1/mounts", "r");
+			int yes = 0;
+			if (fp == NULL)
+				printf("Failed to load mounts file\n" );
+			else
+			{
+				char buffer[1024];
+				while (fgets(buffer, 1024, fp) != NULL)
+				{
+					if (strstr(buffer,"/dev/mmc") == buffer) //starts with it
+					{
+						//search for the mount point
+						char* space_place = strchr(buffer,' ');
+						if (space_place)
+						{
+							space_place++;
+							if (strstr(space_place,directory->name) == space_place) //starts with
+								yes = 1;
+						}
+					}
+				}
+				fclose(fp);		
+			}
+			if (yes)
+#endif
+			{
+				sprintf(loc->name,"SD Card");
+				loc->kind = 1;
+			}
+			else
+			{
+				sprintf(loc->name,"USB Device");
+				loc->kind = 3;
+			}
 		}
 		loc->url = (char*)malloc(strlen(directory->name)+7);
 		sprintf(loc->url,"%s/apps/",directory->name);
