@@ -737,6 +737,7 @@ void resize(Uint16 w,Uint16 h)
 
 int main(int argc, char **argv)
 {
+	srand(time(NULL));
 	spInitCore();
 	spSetAffineTextureHack(0); //We don't need it :)
 	spInitMath();
