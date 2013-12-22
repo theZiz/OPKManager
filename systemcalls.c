@@ -20,8 +20,18 @@ void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
 	char buffer[2048];
 	if (from_source->location->kind == 2)
 	{
-		sprintf(buffer,"wget -O %s%s %s%s%s",to_source->location->url,to_source->fileName,from_source->location->url,from_source->url_addition,from_source->fileName);
-		system(buffer);
+		char random_filename[64];
+		sprintf(random_filename,"/tmp/OPKManager_tmp_%i%i%i%i%i%i%i%i%i%i.opk",
+			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10,
+			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10);
+		sprintf(buffer,"wget -O %s %s%s%s",random_filename,from_source->location->url,from_source->url_addition,from_source->fileName);
+		if (system(buffer)) //Err0r
+		{
+			sprintf(buffer,"rm %s",random_filename);
+			show_error = 1;
+			return;
+		}
+		sprintf(buffer,"mv %s %s%s",random_filename,to_source->location->url,to_source->fileName);
 		struct tm* myTime = localtime ((time_t*)&(from_source->version));
 		sprintf(buffer,"touch -t %04i%02i%02i%02i%02i.%02i %s%s",myTime->tm_year+1900,myTime->tm_mon+1,myTime->tm_mday,myTime->tm_hour,myTime->tm_min,myTime->tm_sec,to_source->location->url,to_source->fileName);
 		system(buffer);
@@ -41,7 +51,13 @@ void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_loca
 	if (from_source->location->kind == 2)
 	{
 		sprintf(buffer,"wget -O %s%s %s%s%s",new_location->url,from_source->fileName,from_source->location->url,from_source->url_addition,from_source->fileName);
-		system(buffer);
+		if (system(buffer))
+		{
+			sprintf(buffer,"rm %s%s",new_location->url,from_source->fileName);
+			system(buffer);
+			show_error = 1;
+			return;
+		}
 		struct tm* myTime = localtime ((time_t*)&(from_source->version));
 		sprintf(buffer,"touch -t %04i%02i%02i%02i%02i.%02i %s%s",myTime->tm_year+1900,myTime->tm_mon+1,myTime->tm_mday,myTime->tm_hour,myTime->tm_min,myTime->tm_sec,new_location->url,from_source->fileName);
 		system(buffer);

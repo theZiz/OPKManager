@@ -18,7 +18,7 @@
 #include <sparrow3d.h>
 #include <opk.h>
 
-#ifdef X86
+#ifndef X86CPU
 	#define ROOT "/media"
 #else
 	#define ROOT "./test"
@@ -83,6 +83,7 @@ int show_copy = 0;
 int copy_is_install;
 int show_move = 0;
 int show_delete = 0;
+int show_error = 0;
 pLocation from_sel,to_sel;
 pSourceList from_sel_source,to_sel_source;
 
@@ -250,7 +251,7 @@ void draw( void )
 		case 3:
 			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
 			sprintf(buffer2,"%s%s ?",to_sel->url,to_sel_source->fileName);
-			draw_sure("Are you sure you want to overwrite",buffer2,"with",buffer);
+			draw_sure("Are you sure you want to overwrite",buffer2,"with",buffer,0);
 			break;
 	}
 	switch (show_move)
@@ -266,7 +267,7 @@ void draw( void )
 		case 3:
 			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
 			sprintf(buffer2,"%s%s ?",to_sel->url,to_sel_source->fileName);
-			draw_sure("Are you sure you want to overwrite",buffer2,"with",buffer);
+			draw_sure("Are you sure you want to overwrite",buffer2,"with",buffer,0);
 			break;
 	}
 	switch (show_delete)
@@ -277,7 +278,13 @@ void draw( void )
 			break;
 		case 3:
 			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
-			draw_sure("Are you sure you want to delete",buffer,"","");
+			draw_sure("Are you sure you want to delete",buffer,"","",0);
+			break;
+	}
+	switch (show_error)
+	{
+		case 1:
+			draw_sure("Connection error!","Coudln't download'",sel->longName,"Maybe no network connection?",1);
 			break;
 	}
 	spFlip();
@@ -541,19 +548,26 @@ int calc(Uint32 steps)
 			}
 			return 0;
 	}
+	//ERROR
+	if (show_error)
+	{
+		if (calc_sure() != 1)
+			show_error = 0;
+		return 0;
+	}
 	if (spGetInput()->button[SP_BUTTON_L_NOWASD])
 	{
 		spGetInput()->button[SP_BUTTON_L_NOWASD] = 0;
 		info("Updating repository packages...",1);
 		update_repositories();
 	}
-	if (spGetInput()->button[SP_BUTTON_START_NOWASD])
+	if (spGetInput()->button[SP_BUTTON_START_NOWASD] && opk_count>0) //DETAILS
 	{
 		spGetInput()->button[SP_BUTTON_START_NOWASD] = 0;
 		show_details = 1;
 		return 0;
 	}
-	if (spGetInput()->button[SP_BUTTON_LEFT_NOWASD]) //COPY
+	if (spGetInput()->button[SP_BUTTON_LEFT_NOWASD] && opk_count>0) //COPY
 	{
 		spGetInput()->button[SP_BUTTON_LEFT_NOWASD] = 0;
 		pSourceList source = sel->sources;
@@ -582,7 +596,7 @@ int calc(Uint32 steps)
 			return 0;
 		}
 	}
-	if (spGetInput()->button[SP_BUTTON_UP_NOWASD]) //DELETE
+	if (spGetInput()->button[SP_BUTTON_UP_NOWASD] && opk_count>0) //DELETE
 	{
 		spGetInput()->button[SP_BUTTON_UP_NOWASD] = 0;
 		pSourceList source = sel->sources;
@@ -609,7 +623,7 @@ int calc(Uint32 steps)
 			return 0;
 		}
 	}
-	if (spGetInput()->button[SP_BUTTON_RIGHT_NOWASD]) //MOVE
+	if (spGetInput()->button[SP_BUTTON_RIGHT_NOWASD] && opk_count>0) //MOVE
 	{
 		spGetInput()->button[SP_BUTTON_RIGHT_NOWASD] = 0;
 		pSourceList source = sel->sources;

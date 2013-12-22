@@ -211,7 +211,7 @@ int calc_selection(int steps,pOpkList sel, int show, pLocation except_location,i
 	return 1;
 }
 
-void draw_sure(char* caption1,char* caption2,char* caption3,char* caption4)
+void draw_sure(char* caption1,char* caption2,char* caption3,char* caption4,int error)
 {
 	char buffer[256];
 	spInterpolateTargetToColor(0,SP_ONE/2);
@@ -238,7 +238,10 @@ void draw_sure(char* caption1,char* caption2,char* caption3,char* caption4)
 	else
 		spFontDrawMiddle(screen->w/2,y,0,caption4,font_small);
 	y+=font->maxheight*2;
-	spFontDrawMiddle(screen->w/2,y,0,"[o] Okay      [c] No",font);
+	if (error)
+		spFontDrawMiddle(screen->w/2,y,0,"[o] or [c]: Okay",font);
+	else
+		spFontDrawMiddle(screen->w/2,y,0,"[o] Okay      [c] No",font);
 }
 
 int calc_sure()

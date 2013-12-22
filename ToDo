@@ -1,4 +1,3 @@
 * Reading the right folder of the sdcard (/proc/1/mounts magic with /dev/mmc*)
-* Cleaning up after program termination
 * First Release
 * Repository stuff...

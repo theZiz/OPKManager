@@ -20,6 +20,13 @@ class UpdateAction(argparse.Action):
 		print "url_addition: puzzletube/"#Url addition. Not needed.
 		print "filename: puzzletube-gcw-1.3.2.0.opk" #Filename: Of course NEEDED.
 		print "" #line breaks make the like beatiful
+		print "[Sparrow C4A Manager]"
+		print ""
+		print "version: 1387697148"
+		print "description: An alternative manager for Compo4All"
+		print "url_addition: Sparrow-C4A-Manager/"
+		print "filename: sparrow-c4a-manager-gcw-1.3.2.0.opk"
+		print ""
 
 def main():
 	parser = argparse.ArgumentParser(description="Ziz's Repository script")
