@@ -18,7 +18,19 @@
 void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
 {
 	char buffer[2048];
-	sprintf(buffer,"cp --preserve=all %s%s %s%s",from_source->location->url,from_source->fileName,to_source->location->url,to_source->fileName);
+	if (from_source->location->kind == 2)
+	{
+		sprintf(buffer,"wget -O %s%s %s%s%s",to_source->location->url,to_source->fileName,from_source->location->url,from_source->url_addition,from_source->fileName);
+		system(buffer);
+		struct tm* myTime = localtime ((time_t*)&(from_source->version));
+		sprintf(buffer,"touch -t %04i%02i%02i%02i%02i.%02i %s%s",myTime->tm_year+1900,myTime->tm_mon+1,myTime->tm_mday,myTime->tm_hour,myTime->tm_min,myTime->tm_sec,to_source->location->url,to_source->fileName);
+		system(buffer);
+	}
+	else
+	{
+		sprintf(buffer,"cp --preserve=all %s%s %s%s",from_source->location->url,from_source->fileName,to_source->location->url,to_source->fileName);
+		system(buffer);
+	}
 	system(buffer);
 	to_source->version = from_source->version;
 }
@@ -26,8 +38,19 @@ void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
 void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_location)
 {
 	char buffer[2048];
-	sprintf(buffer,"cp --preserve=all %s%s %s",from_source->location->url,from_source->fileName,new_location->url);
-	system(buffer);
+	if (from_source->location->kind == 2)
+	{
+		sprintf(buffer,"wget -O %s%s %s%s%s",new_location->url,from_source->fileName,from_source->location->url,from_source->url_addition,from_source->fileName);
+		system(buffer);
+		struct tm* myTime = localtime ((time_t*)&(from_source->version));
+		sprintf(buffer,"touch -t %04i%02i%02i%02i%02i.%02i %s%s",myTime->tm_year+1900,myTime->tm_mon+1,myTime->tm_mday,myTime->tm_hour,myTime->tm_min,myTime->tm_sec,new_location->url,from_source->fileName);
+		system(buffer);
+	}
+	else
+	{
+		sprintf(buffer,"cp --preserve=all %s%s %s",from_source->location->url,from_source->fileName,new_location->url);
+		system(buffer);
+	}
 	add_new_source(opkFile,new_location,from_source->fileName,from_source->version,from_source->description);
 }
 

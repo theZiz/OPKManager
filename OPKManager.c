@@ -91,9 +91,12 @@ pSourceList from_sel_source,to_sel_source;
 #include "selection.c"
 #include "systemcalls.c"
 
-void info(char* buffer)
+void info(char* buffer,int dimm)
 {
-	spClearTarget( BACKGROUND_COLOR );
+	if (dimm)
+		spInterpolateTargetToColor(0,SP_ONE/2);
+	else
+		spClearTarget( BACKGROUND_COLOR );
 	spFontDrawMiddle(screen->w/2,screen->h/2,0,buffer,font);
 	spFlip();
 }
@@ -247,7 +250,7 @@ void draw( void )
 		case 3:
 			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
 			sprintf(buffer2,"%s%s ?",to_sel->url,to_sel_source->fileName);
-			draw_sure("Are you sure you want to overwrite",buffer,"with",buffer2);
+			draw_sure("Are you sure you want to overwrite",buffer2,"with",buffer);
 			break;
 	}
 	switch (show_move)
@@ -263,7 +266,7 @@ void draw( void )
 		case 3:
 			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
 			sprintf(buffer2,"%s%s ?",to_sel->url,to_sel_source->fileName);
-			draw_sure("Are you sure you want to overwrite",buffer,"with",buffer2);
+			draw_sure("Are you sure you want to overwrite",buffer2,"with",buffer);
 			break;
 	}
 	switch (show_delete)
@@ -371,6 +374,8 @@ int calc(Uint32 steps)
 				else
 				{
 					printf("Copying from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,from_sel_source->fileName);
+					if (copy_is_install)
+						info("Downloading...",1);
 					system_copy_new(sel,from_sel_source,to_sel);
 					show_copy = 0;
 				}
@@ -383,6 +388,8 @@ int calc(Uint32 steps)
 				if (result == 2)
 				{
 					printf("Overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,to_sel_source->fileName);					
+					if (copy_is_install)
+						info("Downloading...",1);
 					system_copy_overwrite(from_sel_source,to_sel_source);
 				}
 				show_copy = 0;
@@ -723,8 +730,9 @@ int main(int argc, char **argv)
 	spSetZSet(0);
 	spSetZTest(0);
 	read_locations();
-	info("Searching local packages...");
+	info("Searching local packages...",0);
 	add_all_locations();
+	info("Searching repository packages...",0);
 	update_repositories();
 
 	spLoop( draw, calc, 10, resize, NULL );

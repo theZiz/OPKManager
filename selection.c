@@ -112,7 +112,7 @@ void draw_selection(char* caption,pOpkList sel, int show, pLocation except_locat
 		}
 		if (i == selection_selection)
 			spRectangle(screen->w/2+1,y+font->maxheight/2,0,screen->w*5/6-4,font->maxheight,SELECTED_BACKGROUND_COLOR);
-		sprintf(buffer," %s (%s)",location->name,location->url);
+		sprintf(buffer," %s",location->name);
 		switch (location->kind)
 		{
 			case 0: spBlitSurface(screen->w/2-spFontWidth(buffer,font)/2,y+7,0,internal_surface); break;
@@ -218,13 +218,25 @@ void draw_sure(char* caption1,char* caption2,char* caption3,char* caption4)
 	spRectangle(screen->w/2,screen->h/2,0,screen->w*5/6,font->maxheight*7,LIST_BACKGROUND_COLOR);
 	spRectangleBorder(screen->w/2,screen->h/2,0,screen->w*5/6+2,font->maxheight*7+2,1,1,FONT_COLOR);
 	int y = screen->h/2-font->maxheight*7/2+font->maxheight/2;
-	spFontDrawMiddle(screen->w/2,y,0,caption1,font);
+	if (spFontWidth(caption1,font) < screen->w*5/6)
+		spFontDrawMiddle(screen->w/2,y,0,caption1,font);
+	else
+		spFontDrawMiddle(screen->w/2,y,0,caption1,font_small);
 	y+=font->maxheight;
-	spFontDrawMiddle(screen->w/2,y,0,caption2,font);
+	if (spFontWidth(caption2,font) < screen->w*5/6)
+		spFontDrawMiddle(screen->w/2,y,0,caption2,font);
+	else
+		spFontDrawMiddle(screen->w/2,y,0,caption2,font_small);
 	y+=font->maxheight;
-	spFontDrawMiddle(screen->w/2,y,0,caption3,font);
+	if (spFontWidth(caption3,font) < screen->w*5/6)
+		spFontDrawMiddle(screen->w/2,y,0,caption3,font);
+	else
+		spFontDrawMiddle(screen->w/2,y,0,caption3,font_small);
 	y+=font->maxheight;
-	spFontDrawMiddle(screen->w/2,y,0,caption4,font);
+	if (spFontWidth(caption4,font) < screen->w*5/6)
+		spFontDrawMiddle(screen->w/2,y,0,caption4,font);
+	else
+		spFontDrawMiddle(screen->w/2,y,0,caption4,font_small);
 	y+=font->maxheight*2;
 	spFontDrawMiddle(screen->w/2,y,0,"[o] Okay      [c] No",font);
 }
