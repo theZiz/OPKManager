@@ -221,7 +221,7 @@ void draw( void )
 
 	spFontDrawMiddle(1*screen->w/8,screen->h-2*font->maxheight,0,"[a]: Copy/Install",font_small);
 	spFontDrawMiddle(3*screen->w/8,screen->h-2*font->maxheight,0,"[d]: Move",font_small);
-	spFontDrawMiddle(5*screen->w/8,screen->h-2*font->maxheight,0,"[q]: Update",font_small);
+	spFontDrawMiddle(5*screen->w/8,screen->h-2*font->maxheight,0,"[q]: Update Repos",font_small);
 	spFontDrawMiddle(7*screen->w/8,screen->h-2*font->maxheight,0,"[e]: Run",font_small);
 	spFontDraw(0,screen->h-font_small->maxheight,0,"made by Ziz",font_small);
 	spFontDrawMiddle(3*screen->w/10,screen->h-font->maxheight,0,"[w]: Delete",font_small);
@@ -541,6 +541,12 @@ int calc(Uint32 steps)
 			}
 			return 0;
 	}
+	if (spGetInput()->button[SP_BUTTON_L_NOWASD])
+	{
+		spGetInput()->button[SP_BUTTON_L_NOWASD] = 0;
+		info("Updating repository packages...",1);
+		update_repositories();
+	}
 	if (spGetInput()->button[SP_BUTTON_START_NOWASD])
 	{
 		spGetInput()->button[SP_BUTTON_START_NOWASD] = 0;
@@ -732,8 +738,6 @@ int main(int argc, char **argv)
 	read_locations();
 	info("Searching local packages...",0);
 	add_all_locations();
-	info("Searching repository packages...",0);
-	update_repositories();
 
 	spLoop( draw, calc, 10, resize, NULL );
 	spFontDelete(font);
