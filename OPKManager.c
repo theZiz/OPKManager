@@ -222,10 +222,17 @@ void draw( void )
 	spFontDrawRight(screen->w,screen->h-font_small->maxheight,0,"Version "VERSION,font_small);
 	if (show_details)
 		draw_details(sel);
+	char buffer[256];
 	switch (show_copy)
 	{
-		case 1: draw_selection("From which location?",sel,1,NULL); break;
-		case 2: draw_selection("To which location?",sel,0,from_sel); break;
+		case 1:
+			sprintf(buffer,"Copy \"%s\" from which location?",sel->longName);
+			draw_selection(buffer,sel,1,NULL);
+			break;
+		case 2:
+			sprintf(buffer,"Copy \"%s\" to which location?",sel->longName);		
+			draw_selection(buffer,sel,0,from_sel);
+			break;
 	}
 	spFlip();
 }
