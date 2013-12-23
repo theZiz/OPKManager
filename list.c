@@ -126,32 +126,45 @@ void read_locations()
 
 pSourceList add_new_source(pOpkList file,pLocation location,char* filename,Sint64 version,char* description)
 {
-	pSourceList newSource = (pSourceList)malloc(sizeof(tSourcelist));
-	newSource->version = version;
-	newSource->location = location;
+	//Source already in file?
+	pSourceList newSource = file->sources;
+	while (newSource)
+	{
+		if (newSource->location == location)
+			break;
+		newSource = newSource->next;
+	}
+	if (newSource == NULL)
+	{
+		newSource = (pSourceList)malloc(sizeof(tSourcelist));
+		newSource->location = location;
+		newSource->url_addition = NULL;	
+		newSource->fileName = NULL;
+		newSource->description = NULL;
+		newSource->next = file->sources;
+		file->sources = newSource;
+	}
 	if (filename)
 	{
+		if (newSource->fileName)
+			free(newSource->fileName);
 		int l = strlen(filename)+1;
 		newSource->fileName = (char*)malloc(l);
 		memcpy(newSource->fileName,filename,l);
 	}
-	else
-		newSource->fileName = NULL;
 	if (description)
 	{
+		if (newSource->description)
+		{
+			free(newSource->description);
+			spDeleteTextBlock(newSource->block);
+		}
 		int l = strlen(description)+1;
 		newSource->description = (char*)malloc(l);
 		memcpy(newSource->description,description,l);
 		newSource->block = spCreateTextBlock(description,screen->w/2,font);
 	}
-	else
-	{
-		newSource->description = NULL;
-		newSource->block = NULL;
-	}
-	newSource->url_addition = NULL;
-	newSource->next = file->sources;
-	file->sources = newSource;
+	newSource->version = version;
 	return newSource;
 }
 
@@ -274,6 +287,8 @@ void add_new_web(char* name,char* filename,char* url_addition,char* description,
 	pSourceList source = add_file_to_opkList(name,filename,loc,version,description[0]?description:NULL);
 	if (url_addition[0])
 	{
+		if (source->url_addition)
+			free(source->url_addition);
 		int k = strlen(url_addition)+1;
 		source->url_addition = (char*)malloc(k);
 		memcpy(source->url_addition,url_addition,k);

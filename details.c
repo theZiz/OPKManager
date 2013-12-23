@@ -53,9 +53,6 @@ void draw_details(pOpkList sel)
 			block = source->block;
 		source = source->next;
 	}
-	spFontDrawRight(LEFT_TEXT,y,0,"Filename:",font);
-	//spFontDraw     (RIGHT_TEXT,y*screen->h/14,0,sel->fileName,font);
-	y+=distance;
 	if (block)
 	{
 		spFontDrawRight(LEFT_TEXT,y,0,"Description:",font);

@@ -15,16 +15,16 @@
   * For feedback and questions about my Files and Projects please mail me,
   * Alexander Matthes (Ziz) , zizsdl_at_googlemail.com */
 
-#ifdef X86CPU
+/*#ifdef X86CPU
 	#define TESTING
 	#define GCW
 	#undef X86CPU
-#endif
+#endif*/
 #include <sparrow3d.h>
-#ifdef TESTING
+/*#ifdef TESTING
 	#define X86CPU
 	#undef GCW
-#endif
+#endif*/
 #include <opk.h>
 
 #ifndef X86CPU
@@ -136,7 +136,7 @@ void draw( void )
 		Sint64 oldest = 0;
 		while (source)
 		{
-			if (source->version < oldest || oldest == 0)
+			if (source->location->kind != 2 && (source->version < oldest || oldest == 0))
 				oldest = source->version;
 			source = source->next;
 		}
@@ -150,7 +150,7 @@ void draw( void )
 				case 2: web = 1; break;
 				case 3: usb = 1; break;
 			}
-			if (oldest+ONE_HOUR < source->version)
+			if (oldest!= 0 && oldest+ONE_HOUR < source->version)
 				switch (source->location->kind)
 				{
 					case 0: internal_u = 1; break;

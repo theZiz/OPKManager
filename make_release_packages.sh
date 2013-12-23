@@ -1,7 +1,7 @@
 #!/bin/sh
 # Change the folder to YOUR sparrow3d folder!
 PROGRAM="OPKManager"
-VERSION="1.0.0.0"
+VERSION="0.5.0.0"
 DEST=./build/gcw
 echo "<html>" > index.htm
 echo "<head>" >> index.htm
@@ -17,6 +17,8 @@ do
 		echo "$NAME:"
 		echo "--> Copy temporary folders"
 		cp -r font "$f/$PROGRAM"
+		cp -r data "$f/$PROGRAM"
+		cp -r repositories "$f/$PROGRAM"
 		cp README.md "$f/$PROGRAM"
 		cd $f
 		echo "--> Create archive"
@@ -44,6 +46,8 @@ do
 		fi
 		echo "--> Remove temporary folders"
 		rm -r $PROGRAM/font
+		rm -r $PROGRAM/data
+		rm -r $PROGRAM/repositories
 		rm $PROGRAM/README.md
 		cd ..
 		cd ..
