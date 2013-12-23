@@ -19,7 +19,6 @@ void read_locations()
 {
 	spFileListPointer directoryList = NULL;
 	spFileGetDirectory(&directoryList,ROOT,0,1);
-	int rlen = strlen(ROOT);
 	spFileListPointer directory = directoryList;
 	while (directory)
 	{
@@ -30,27 +29,102 @@ void read_locations()
 			loc->kind = 0;
 		}
 		else
-		if (strcmp(directory->name,ROOT"/sdcard") == 0)
 		{
-			sprintf(loc->name,"SD Card");
-			loc->kind = 1;
-		}
-		else
-		{
-			sprintf(loc->name,"USB Device");			
-			loc->kind = 3;
+			//Looking, whether this is an SD Card or not.
+#ifdef X86CPU
+			if (strcmp(directory->name,ROOT"/sdcard") == 0)
+#else
+			FILE *fp = fopen("/proc/1/mounts", "r");
+			int yes = 0;
+			if (fp == NULL)
+				printf("Failed to load mounts file\n" );
+			else
+			{
+				char buffer[1024];
+				while (fgets(buffer, 1024, fp) != NULL)
+				{
+					if (strstr(buffer,"/dev/mmc") == buffer) //starts with it
+					{
+						//search for the mount point
+						char* space_place = strchr(buffer,' ');
+						if (space_place)
+						{
+							space_place++;
+							if (strstr(space_place,directory->name) == space_place) //starts with
+								yes = 1;
+						}
+					}
+				}
+				fclose(fp);		
+			}
+			if (yes)
+#endif
+			{
+				sprintf(loc->name,"SD Card");
+				loc->kind = 1;
+			}
+			else
+			{
+				sprintf(loc->name,"USB Device");
+				loc->kind = 3;
+			}
 		}
 		loc->url = (char*)malloc(strlen(directory->name)+7);
 		sprintf(loc->url,"%s/apps/",directory->name);
-		printf("Found %s\n",loc->url);
+		loc->update_call = NULL;
 		loc->next = locationList;
 		locationList = loc;
+		printf("Found %s (%i): %s\n",loc->name,loc->kind,loc->url);
+		directory = directory->next;
+	}
+	spFileDeleteList(directoryList);
+	//scripts!
+	directoryList = NULL;
+	spFileGetDirectory(&directoryList,"./repositories",0,1);
+	directory = directoryList;
+	while (directory)
+	{
+		//Calling the script:
+		char buffer[256];
+		sprintf(buffer,"%s --register",directory->name);
+		FILE *fp = popen(buffer, "r");
+		if (fp == NULL)
+		{
+			printf("Failed to run repository script\n" );
+			directory = directory->next;
+			continue;
+		}
+		int i = 0;
+		pLocation loc = (pLocation)malloc(sizeof(tLocation));
+		fgets(loc->name, sizeof(loc->name), fp);
+		loc->name[strlen(loc->name)-1] = 0;
+		fgets(buffer, 256, fp);
+		if (strcmp(buffer,"web\n") == 0)
+			loc->kind = 2;
+		else
+			loc->kind = 3;
+		fgets(buffer, 256, fp);
+		int l = strlen(buffer)+1;
+		loc->url = (char*)malloc(l);
+		memcpy(loc->url,buffer,l);
+		loc->url[l-2] = 0;
+
+		fgets(buffer, 256, fp);
+		l = strlen(buffer)+1;
+		loc->update_call = (char*)malloc(l);
+		memcpy(loc->update_call,buffer,l);
+		loc->update_call[l-2] = 0;
+
+		loc->next = locationList;
+		locationList = loc;
+		pclose(fp);		
+		printf("Found %s (%i): %s\n",loc->name,loc->kind,loc->url);
 		directory = directory->next;
 	}
 	spFileDeleteList(directoryList);
 }
 
-void add_new_source(pOpkList file,pLocation location,char* filename,Sint64 version,char* description)
+pSourceList add_new_source(pOpkList file,pLocation location,char* filename,Sint64 version,char* description)
 {
 	pSourceList newSource = (pSourceList)malloc(sizeof(tSourcelist));
 	newSource->version = version;
@@ -75,11 +149,13 @@ void add_new_source(pOpkList file,pLocation location,char* filename,Sint64 versi
 		newSource->description = NULL;
 		newSource->block = NULL;
 	}
+	newSource->url_addition = NULL;
 	newSource->next = file->sources;
 	file->sources = newSource;
+	return newSource;
 }
 
-void add_new_file(char* longname,char* filename,pLocation location,Sint64 version,char* description)
+pSourceList add_new_file(char* longname,char* filename,pLocation location,Sint64 version,char* description)
 {
 	pOpkList newOpk = (pOpkList)malloc(sizeof(tOpkList));
 	sprintf(newOpk->longName,"%s",longname);
@@ -93,7 +169,7 @@ void add_new_file(char* longname,char* filename,pLocation location,Sint64 versio
 	}
 	newOpk->smallLongName[i] = 0;
 	newOpk->sources = NULL;
-	add_new_source(newOpk,location,filename,version,description);
+	pSourceList result = add_new_source(newOpk,location,filename,version,description);
 	//Searching the first, which is bigger
 	pOpkList bigger = opkList;
 	pOpkList smaller = NULL;
@@ -110,9 +186,10 @@ void add_new_file(char* longname,char* filename,pLocation location,Sint64 versio
 		opkList = newOpk;
 	newOpk->next = bigger;
 	opk_count++;
+	return result;
 }
 
-void add_file_to_opkList(char* longname,char* filename,pLocation location,Sint64 version,char* description)
+pSourceList add_file_to_opkList(char* longname,char* filename,pLocation location,Sint64 version,char* description)
 {
 	//Searching in the opkList
 	pOpkList file = opkList;
@@ -123,9 +200,8 @@ void add_file_to_opkList(char* longname,char* filename,pLocation location,Sint64
 		file = file->next;
 	}
 	if (file) //found
-		add_new_source(file,location,filename,version,description);
-	else
-		add_new_file(longname,filename,location,version,description);
+		return add_new_source(file,location,filename,version,description);
+	return add_new_file(longname,filename,location,version,description);
 }
 
 void merge_fileList_to_opkList(spFileListPointer fileList,pLocation location)
@@ -180,10 +256,102 @@ void add_all_locations()
 	pLocation loc = locationList;
 	while (loc)
 	{
+		if (loc->kind == 2)
+		{
+			loc = loc->next;
+			continue;
+		}
 		spFileListPointer fileList = NULL;
 		spFileGetDirectory(&fileList,loc->url,0,1);
 		merge_fileList_to_opkList(fileList,loc);
 		spFileDeleteList(fileList);
 		loc = loc->next;
 	}	
+}
+
+void add_new_web(char* name,char* filename,char* url_addition,char* description,Sint64 version,pLocation loc)
+{
+	pSourceList source = add_file_to_opkList(name,filename,loc,version,description[0]?description:NULL);
+	if (url_addition[0])
+	{
+		int k = strlen(url_addition)+1;
+		source->url_addition = (char*)malloc(k);
+		memcpy(source->url_addition,url_addition,k);
+	}
+	printf("Added: %s, Version %s%s%s%s\n%s\n",name,ctime((time_t*)&(version)),loc->url,url_addition,filename,description);
+	description[0] = 0;
+	url_addition[0] = 0;
+}
+
+void update_repositories()
+{
+	pLocation location = locationList;
+	while (location)
+	{
+		if (location->kind != 2)
+		{
+			location = location->next;
+			continue;
+		}
+		FILE *fp = popen(location->update_call, "r");
+		if (fp == NULL)
+		{
+			printf("Failed to run update for %s\n",location->name);
+			location = location->next;
+			continue;
+		}
+		char buffer[1024];
+		/* Read the output a line at a time - output it. */
+		char name[256] = "";
+		char filename[256] = "";
+		char url_addition[256] = "";
+		char description[1024] = "";
+		Sint64 version = 0;
+		while (fgets(buffer, 1024, fp) != NULL)
+		{
+			if (buffer[0] == '\n') //line break, skip
+				continue;
+			int l = strlen(buffer);
+			buffer[l-1] = 0;
+			l--;
+			if (buffer[0] == '[') //new entry
+			{
+				if (name[0]) //Adding old entry
+					add_new_web(name,filename,url_addition,description,version,location);
+				char* end_character = strchr(buffer,']');
+				if (end_character)
+					end_character[0] = 0;
+				memcpy(name,&(buffer[1]),l-1);
+			}
+			else
+			{
+				char* middle_character = strchr(buffer,':');
+				if (middle_character == NULL)
+					continue;
+				middle_character[0] = 0;
+				char key[256];
+				sprintf(key,"%s",buffer);
+				middle_character++;
+				while (middle_character[0] == ' ')
+					middle_character++;
+				char value[256];
+				sprintf(value,"%s",middle_character);
+				if (strcmp(key,"version") == 0)
+					version = atoi(value);
+				else
+				if (strcmp(key,"description") == 0)
+					sprintf(description,"%s",value);
+				else
+				if (strcmp(key,"url_addition") == 0)
+					sprintf(url_addition,"%s",value);
+				else
+				if (strcmp(key,"filename") == 0)
+					sprintf(filename,"%s",value);
+			}
+		}
+		if (name[0]) //Adding last entry
+			add_new_web(name,filename,url_addition,description,version,location);
+		pclose(fp);		
+		location = location->next;
+	}
 }
