@@ -165,3 +165,12 @@ void system_delete(pOpkList opkFile,pSourceList from_source)
 		free(opkFile);
 	}
 }
+
+void system_run(pOpkList sel,pSourceList from_source)
+{
+	char buffer[2048];
+	sprintf(buffer,"Running %s from %s...",sel->longName,from_source->location->name);
+	info(buffer,1);
+	sprintf(buffer,"opkrun %s%s",from_source->location->url,from_source->fileName);
+	system(buffer);
+}

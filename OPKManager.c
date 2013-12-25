@@ -69,6 +69,7 @@ typedef struct sSourceList {
 	spTextBlockPointer block;
 	pLocation location;
 	char* url_addition;
+	char* image_url;
 	pSourceList next;
 } tSourcelist;
 
@@ -93,13 +94,9 @@ int copy_is_install;
 int show_move = 0;
 int show_delete = 0;
 int show_error = 0;
+int show_run = 0;
 pLocation from_sel,to_sel;
 pSourceList from_sel_source,to_sel_source;
-
-#include "list.c"
-#include "details.c"
-#include "selection.c"
-#include "systemcalls.c"
 
 void info(char* buffer,int dimm)
 {
@@ -110,6 +107,11 @@ void info(char* buffer,int dimm)
 	spFontDrawMiddle(screen->w/2,screen->h/2,0,buffer,font);
 	spFlip();
 }
+
+#include "list.c"
+#include "details.c"
+#include "selection.c"
+#include "systemcalls.c"
 
 int offset = 0;
 
@@ -290,6 +292,11 @@ void draw( void )
 			draw_sure("Are you sure you want to delete",buffer,"","",0);
 			break;
 	}
+	if (show_run)
+	{
+			sprintf(buffer,"Run %s from which location?",sel->longName);
+			draw_selection(buffer,sel,1,NULL,0);
+	}
 	switch (show_error)
 	{
 		case 1:
@@ -301,11 +308,6 @@ void draw( void )
 
 int calc(Uint32 steps)
 {
-	if (show_details)
-	{
-		show_details = calc_details();
-		return 0;
-	}
 	pOpkList opk = opkList;
 	pOpkList sel = NULL;
 	int i = 0;
@@ -315,6 +317,11 @@ int calc(Uint32 steps)
 			sel = opk;
 		i++;
 		opk = opk->next;
+	}
+	if (show_details)
+	{
+		show_details = calc_details(sel);
+		return 0;
 	}
 	int result;
 	//COPYING
@@ -557,6 +564,48 @@ int calc(Uint32 steps)
 			}
 			return 0;
 	}
+	//RUNNING
+	switch (show_run)
+	{
+		case 1:
+			result = calc_selection(steps,sel,1,NULL,0);
+			if (result == 2)
+			{
+				from_sel = locationList;
+				int i = 0;
+				pSourceList source;
+				while (from_sel)
+				{
+					if (from_sel->kind == 2)
+					{
+						from_sel = from_sel->next;
+						continue;
+					}
+					source = sel->sources;
+					while (source)
+					{
+						if (source->location == from_sel)
+							break;
+						source = source->next;
+					}
+					if (source)
+					{
+						if (selection_selection == i)
+							break;
+						i++;
+					}
+					from_sel = from_sel->next;
+				}
+				from_sel_source = source;
+				printf("Running %s%s\n",from_sel_source->location->url,from_sel_source->fileName);
+				system_run(sel,from_sel_source);
+				selection_selection = 0;
+			}
+			else
+			if (result == 0)
+				show_run = 0;
+			return 0;
+	}
 	//ERROR
 	if (show_error)
 	{
@@ -629,6 +678,34 @@ int calc(Uint32 steps)
 			from_sel_source = sel->sources;
 			from_sel = sel->sources->location;
 			show_delete = 3;
+			return 0;
+		}
+	}
+	if (spGetInput()->button[SP_BUTTON_R_NOWASD] && opk_count>0) //RUN
+	{
+		spGetInput()->button[SP_BUTTON_R_NOWASD] = 0;
+		pSourceList source = sel->sources;
+		int source_count = 0;
+		while (source)
+		{
+			if (source->location->kind != 2)
+				source_count++;
+			source = source->next;
+		}
+		if (source_count > 1)
+		{
+			selection_selection = 0;
+			show_run = 1;
+			return 0;
+		}
+		else
+		if (source_count == 1)
+		{
+			selection_selection = 0;
+			from_sel_source = sel->sources;
+			from_sel = sel->sources->location;
+			printf("Running %s%s\n",from_sel_source->location->url,from_sel_source->fileName);
+			system_run(sel,from_sel_source);
 			return 0;
 		}
 	}

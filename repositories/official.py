@@ -16,7 +16,8 @@ class RegisterAction(argparse.Action):
 
 class UpdateAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
-		process = subprocess.Popen('wget -qO- http://www.gcw-zero.com/downloads',stdout=subprocess.PIPE,shell=True)
+		#process = subprocess.Popen('wget -qO- http://www.gcw-zero.com/downloads',stdout=subprocess.PIPE,shell=True)
+		process = subprocess.Popen('cat downloads',stdout=subprocess.PIPE,shell=True)
 		output = process.stdout.read().split('<div class="downloads_overview">')
 		for output_part in output:
 			part = output_part.split('\n')
@@ -30,6 +31,8 @@ class UpdateAction(argparse.Action):
 			filename = part[4].split('href="file.php?file=')[1].split('">')[0];
 			print "filename: " + filename
 			l = len(part)
+			found_version = 0
+			found_image = 0
 			for i in range(0,l-1):
 				if string.find(part[i],'Publication Date') != -1:
 					version = part[i+1]
@@ -37,6 +40,13 @@ class UpdateAction(argparse.Action):
 					version = version.split('<')[0]
 					t = time.strptime(version,"%A, %d %b %Y")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
+					found_version = 1
+				if string.find(part[i],'<div class="downloads_preview"') != -1:
+					image = part[i];
+					image = image.split("background-image: url('")[1].split("');")[0];
+					print "image_url: http://www.gcw-zero.com/" + image
+					found_image = 1
+				if (found_version and found_image):
 					break
 		
 

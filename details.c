@@ -18,8 +18,18 @@
 #define LEFT_TEXT screen->w*9/32
 #define RIGHT_TEXT screen->w*10/32
 
+SDL_Surface* show_image = NULL;
+
 void draw_details(pOpkList sel)
 {
+	if (show_image)
+	{
+		spClearTarget(0);
+		Sint32 zoom = spMin(screen->w*SP_ONE/show_image->w,screen->h*SP_ONE/show_image->h);
+		spRotozoomSurface(screen->w/2,screen->h/2,0,show_image,zoom,zoom,0);
+		spFontDrawMiddle(screen->w/2,screen->h-font_small->maxheight-2,0,"[o] or [c] Back",font_small);
+		return;
+	}
 	char buffer[256];
 	spInterpolateTargetToColor(0,SP_ONE/2);
 	spRectangle(screen->w/2,screen->h/2,0,screen->w*5/6,screen->h*5/6,LIST_BACKGROUND_COLOR);
@@ -32,6 +42,7 @@ void draw_details(pOpkList sel)
 	spFontDrawRight(LEFT_TEXT,y,0,"Version:",font);
 	pSourceList source = sel->sources;
 	spTextBlockPointer block = NULL;
+	char* image_url = NULL;
 	while (source)
 	{
 		switch (source->location->kind)
@@ -51,6 +62,8 @@ void draw_details(pOpkList sel)
 		y+=distance;
 		if (source->block)
 			block = source->block;
+		if (source->image_url)
+			image_url = source->image_url;
 		source = source->next;
 	}
 	if (block)
@@ -60,12 +73,50 @@ void draw_details(pOpkList sel)
 	}
 	y+=distance;
 
-	spFontDrawMiddle(screen->w/2,screen->h*13/16,0,"[o] or [c] Back",font);
+	if (image_url)
+		spFontDrawMiddle(screen->w/2,screen->h*13/16,0,"[o] Show screenshot     [c] Back",font);
+	else
+		spFontDrawMiddle(screen->w/2,screen->h*13/16,0,"[o] or [c] Back",font);
 }
 
-int calc_details()
+int calc_details(pOpkList sel)
 {
-	if (spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] || spGetInput()->button[SP_PRACTICE_OK_NOWASD])
+	if (show_image)
+	{
+		if (spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] || spGetInput()->button[SP_PRACTICE_OK_NOWASD])
+		{
+			spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] = 0;
+			spGetInput()->button[SP_PRACTICE_OK_NOWASD] = 0;
+			spDeleteSurface(show_image);
+			show_image = NULL;
+		}
+		return 1;
+	}
+	pSourceList source = sel->sources;
+	char* image_url = NULL;
+	while (source)
+	{
+		if (source->image_url)
+			image_url = source->image_url;
+		source = source->next;
+	}
+	if (image_url && spGetInput()->button[SP_PRACTICE_OK_NOWASD])
+	{
+		info("Downloading image...",1);
+		spGetInput()->button[SP_PRACTICE_OK_NOWASD] = 0;
+		char random_filename[64];
+		sprintf(random_filename,"/tmp/OPKManager_tmp_%i%i%i%i%i%i%i%i%i%i.png",
+			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10,
+			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10);
+		char buffer[1024];
+		sprintf(buffer,"wget -O %s %s",random_filename,image_url);
+		//sprintf(buffer,"cp /home/alexander/develop/handhelds/puzzletube/build/pandora/puzzletube/previews/screenshot1.png %s",random_filename);
+		if (system(buffer) == 0)
+			show_image = spLoadSurface(random_filename);
+		sprintf(buffer,"rm %s",random_filename);
+		system(buffer);
+	}
+	if (spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] || (image_url == NULL && spGetInput()->button[SP_PRACTICE_OK_NOWASD]))
 	{
 		spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] = 0;
 		spGetInput()->button[SP_PRACTICE_OK_NOWASD] = 0;
