@@ -1,6 +1,27 @@
 OPKManager
 ==========
 
-A Manager for GCW Zeros OPK files. The child process is created with a single thread—the one that called fork(). The entire virtual address space of the parent is replicated in the child, including the states of mutexes, condition variables, and other pthreads objects; the use of pthread_atfork(3) may be helpful for dealing with problems that this can cause.
-The child inherits copies of the parent's set of open file descriptors. Each file descriptor in the child refers to the same open file description (see open(2)) as the corresponding file descriptor in the parent. This means that the two descriptors share open file status flags, current file offset, and signal-driven I/O attributes (see the description of F_SETOWN and F_SETSIG in fcntl(2)).
-The child inherits copies of the parent's set of open message queue descriptors (see mq_overview(7)). Each descriptor in the child refers to the same open message queue description as the corresponding descriptor in the parent. This means that the two descriptors share the same flags (mq_flags).
+This is "OPKManager", a manager for your opk files installed on your gcw zero. With this program you can copy, move and delete your opk files in your internal space, sd card and even connected usb devices. Use the buttons described in the main window to do these tasks ([a], [d], [w]). The icon beside the program name tell you, where your application lies.
+
+Installation
+============
+
+If you are connected with the internet e.g. via WiFi or USB network, press [l] to update the list of online available programs. You will see a new globe-like icon on some applications. These applications are available online and you can install them like you copy programs with [a]. Just select a repository instead of a local location as source.
+
+Details
+=======
+
+Press [s] to get some details about the selected program. You will the the programs name and at least
+one version and the location of this version. The version is in fact just the date you installed the application. If some of your sources have a newer version than the others, a little explanation mark will be shown in the main view. So you easily see, if one of your applications e.g. has a update in a repository to install. If a screenshot is available press [d] to download and show it.
+
+Repositories
+============
+
+ToDo
+
+Closing words
+=============
+
+To run the selected program press [S]. To exit the OPKManager press [E].
+
+This program was developed by Ziz. It comes with no warranty of everything. ;) It is licensed under the GPL2+. If you sell this program Richard Stallman will come to you at night...

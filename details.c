@@ -157,7 +157,9 @@ int calc_help(int steps)
 	{
 		if (time_until_next <= 0)
 		{
-			help_pos-=SP_ONE/16;
+			help_pos-=SP_ONE/(helpBlock->line_count-12);
+			if (help_pos < 0)
+				help_pos = 0;
 			next_in_a_row++;
 			time_until_next = 300/next_in_a_row;
 		}
@@ -167,7 +169,9 @@ int calc_help(int steps)
 	{
 		if (time_until_next <= 0)
 		{
-			help_pos+=SP_ONE/16;
+			help_pos+=SP_ONE/(helpBlock->line_count-12);
+			if (help_pos > SP_ONE)
+				help_pos = SP_ONE;
 			next_in_a_row++;
 			time_until_next = 300/next_in_a_row;
 		}

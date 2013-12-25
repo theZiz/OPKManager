@@ -190,7 +190,7 @@ void draw( void )
 		i++;
 		opk = opk->next;
 	}
-	if (offset != listSurface->h/font->maxheight-opk_count)
+	if (listSurface->h/font->maxheight-opk_count < 0 && offset != listSurface->h/font->maxheight-opk_count)
 	{
 		spTriangle(listSurface->w- 1,listSurface->h-11,0,
 		           listSurface->w-11,listSurface->h-11,0,
