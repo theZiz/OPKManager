@@ -69,7 +69,7 @@ void draw_details(pOpkList sel)
 	if (block)
 	{
 		spFontDrawRight(LEFT_TEXT,y,0,"Description:",font);
-		spFontDrawTextBlock(SP_LEFT,RIGHT_TEXT,y,0,block,screen->h*13/16-y,0,font);
+		spFontDrawTextBlock(left,RIGHT_TEXT,y,0,block,screen->h*13/16-y,0,font);
 	}
 	y+=distance;
 
@@ -117,6 +117,67 @@ int calc_details(pOpkList sel)
 		system(buffer);
 	}
 	if (spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] || (image_url == NULL && spGetInput()->button[SP_PRACTICE_OK_NOWASD]))
+	{
+		spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] = 0;
+		spGetInput()->button[SP_PRACTICE_OK_NOWASD] = 0;
+		return 0;
+	}
+	return 1;
+}
+
+Sint32 help_pos = 0;
+
+void draw_help()
+{
+	char buffer[256];
+	spInterpolateTargetToColor(0,SP_ONE/2);
+	spRectangle(screen->w/2,screen->h/2,0,screen->w*5/6,screen->h*5/6,LIST_BACKGROUND_COLOR);
+	spRectangleBorder(screen->w/2,screen->h/2,0,screen->w*5/6+2,screen->h*5/6+2,1,1,FONT_COLOR);
+	spFontDrawTextBlock(left,screen->w/8,screen->h/8,0,helpBlock,screen->h*3/4,help_pos,font);
+	spFontDrawMiddle(screen->w/2,screen->h*11/12-font->maxheight,0,"[o] or [c] Back",font_small);
+	if (help_pos != SP_ONE)
+	{
+		spTriangle(screen->w*11/12 - 1,screen->h*11/12 -11,0,
+		           screen->w*11/12 -11,screen->h*11/12 -11,0,
+		           screen->w*11/12 - 6,screen->h*11/12 - 6,0,FONT_COLOR);
+	}
+	if (help_pos != 0)
+	{
+		spTriangle(screen->w*11/12 - 6,screen->h/12+ 6,0,
+		           screen->w*11/12 -11,screen->h/12+11,0,
+		           screen->w*11/12 - 1,screen->h/12+11,0,FONT_COLOR);
+	}
+}
+
+int calc_help(int steps)
+{
+	if (time_until_next > 0)
+		time_until_next -= steps;
+	if (spGetInput()->axis[1] < 0 && help_pos > 0)
+	{
+		if (time_until_next <= 0)
+		{
+			help_pos-=SP_ONE/16;
+			next_in_a_row++;
+			time_until_next = 300/next_in_a_row;
+		}
+	}
+	else
+	if (spGetInput()->axis[1] > 0 && help_pos < SP_ONE)
+	{
+		if (time_until_next <= 0)
+		{
+			help_pos+=SP_ONE/16;
+			next_in_a_row++;
+			time_until_next = 300/next_in_a_row;
+		}
+	}
+	else
+	{
+		time_until_next = 0;
+		next_in_a_row = 0;
+	}
+	if (spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] || spGetInput()->button[SP_PRACTICE_OK_NOWASD])
 	{
 		spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] = 0;
 		spGetInput()->button[SP_PRACTICE_OK_NOWASD] = 0;

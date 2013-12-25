@@ -14,7 +14,7 @@
   * 
   * For feedback and questions about my Files and Projects please mail me,
   * Alexander Matthes (Ziz) , zizsdl_at_googlemail.com */
-  
+
 void read_locations()
 {
 	spFileListPointer directoryList = NULL;

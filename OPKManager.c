@@ -15,16 +15,18 @@
   * For feedback and questions about my Files and Projects please mail me,
   * Alexander Matthes (Ziz) , zizsdl_at_googlemail.com */
 
-/*#ifdef X86CPU
+#define GCW_FEELING
+
+#if defined GCW_FEELING && defined X86CPU
 	#define TESTING
 	#define GCW
 	#undef X86CPU
-#endif*/
+#endif
 #include <sparrow3d.h>
-/*#ifdef TESTING
+#if defined GCW_FEELING && defined TESTING
 	#define X86CPU
 	#undef GCW
-#endif*/
+#endif
 #include <opk.h>
 
 #ifndef X86CPU
@@ -48,6 +50,9 @@ SDL_Surface* internal_surface;
 SDL_Surface* web_surface;
 SDL_Surface* usb_surface;
 SDL_Surface* update_surface;
+#define MAX_HELP 65536
+char help[MAX_HELP];
+spTextBlockPointer helpBlock = NULL;
 spFontPointer font = NULL;
 spFontPointer font_small = NULL;
 #define ONE_HOUR (60*60)
@@ -95,6 +100,7 @@ int show_move = 0;
 int show_delete = 0;
 int show_error = 0;
 int show_run = 0;
+int show_help = 0;
 pLocation from_sel,to_sel;
 pSourceList from_sel_source,to_sel_source;
 
@@ -231,17 +237,21 @@ void draw( void )
 	spSetVerticalOrigin(SP_CENTER);
 	spSetHorizontalOrigin(SP_CENTER);
 
-	spFontDraw(0*screen->w/8,screen->h-2*font->maxheight,0,"[a]: Copy/Install",font_small);
-	spFontDraw(2*screen->w/8,screen->h-2*font->maxheight,0,"[d]: Move",font_small);
-	spFontDraw(4*screen->w/8,screen->h-2*font->maxheight,0,"[w]: Delete",font_small);
-	spFontDraw(6*screen->w/8,screen->h-2*font->maxheight,0,"[S]: Details",font_small);
-	spFontDraw(0*screen->w/8,screen->h-1*font->maxheight,0,"[q]: Update Repos, needs internet!",font_small);
-	spFontDraw(4*screen->w/8,screen->h-1*font->maxheight,0,"[e]: Run",font_small);
-	spFontDraw(6*screen->w/8,screen->h-1*font->maxheight,0,"[E]: Exit",font_small);
+	spFontDraw(0*screen->w/30+2,screen->h-2*font->maxheight-1,0,"[a]: Copy/Install",font_small);
+	spFontDraw(8*screen->w/30,screen->h-2*font->maxheight-1,0,"[d]: Move",font_small);
+	spFontDraw(13*screen->w/30,screen->h-2*font->maxheight-1,0,"[w]: Delete",font_small);
+	spFontDraw(6*screen->w/10,screen->h-2*font->maxheight-1,0,"[s]: Details",font_small);
+	spFontDraw(8*screen->w/10,screen->h-2*font->maxheight-1,0,"[S]: Run",font_small);
+	
+	spFontDraw(0*screen->w/10+2,screen->h-1*font->maxheight,0,"[q]: Update Repositories, needs internet!",font_small);
+	spFontDraw(6*screen->w/10,screen->h-1*font->maxheight,0,"[e]: Help",font_small);
+	spFontDraw(8*screen->w/10,screen->h-1*font->maxheight,0,"[E]: Exit",font_small);
 	spFontDraw(0,0,0,"made by Ziz",font_small);
 	spFontDrawRight(screen->w,0,0,"Version "VERSION,font_small);
 	if (show_details)
 		draw_details(sel);
+	if (show_help)
+		draw_help();
 	char buffer[256],buffer2[256];
 	switch (show_copy)
 	{
@@ -321,6 +331,11 @@ int calc(Uint32 steps)
 	if (show_details)
 	{
 		show_details = calc_details(sel);
+		return 0;
+	}
+	if (show_help)
+	{
+		show_help = calc_help(steps);
 		return 0;
 	}
 	int result;
@@ -599,7 +614,7 @@ int calc(Uint32 steps)
 				from_sel_source = source;
 				printf("Running %s%s\n",from_sel_source->location->url,from_sel_source->fileName);
 				system_run(sel,from_sel_source);
-				selection_selection = 0;
+				show_run = 0;
 			}
 			else
 			if (result == 0)
@@ -619,10 +634,16 @@ int calc(Uint32 steps)
 		info("Updating repository packages...",1);
 		update_repositories();
 	}
-	if (spGetInput()->button[SP_BUTTON_START_NOWASD] && opk_count>0) //DETAILS
+	if (spGetInput()->button[SP_BUTTON_DOWN_NOWASD] && opk_count>0) //DETAILS
 	{
-		spGetInput()->button[SP_BUTTON_START_NOWASD] = 0;
+		spGetInput()->button[SP_BUTTON_DOWN_NOWASD] = 0;
 		show_details = 1;
+		return 0;
+	}
+	if (spGetInput()->button[SP_BUTTON_R_NOWASD] && opk_count>0) //HELP
+	{
+		spGetInput()->button[SP_BUTTON_R_NOWASD] = 0;
+		show_help = 1;
 		return 0;
 	}
 	if (spGetInput()->button[SP_BUTTON_LEFT_NOWASD] && opk_count>0) //COPY
@@ -681,9 +702,9 @@ int calc(Uint32 steps)
 			return 0;
 		}
 	}
-	if (spGetInput()->button[SP_BUTTON_R_NOWASD] && opk_count>0) //RUN
+	if (spGetInput()->button[SP_BUTTON_START_NOWASD] && opk_count>0) //RUN
 	{
-		spGetInput()->button[SP_BUTTON_R_NOWASD] = 0;
+		spGetInput()->button[SP_BUTTON_START_NOWASD] = 0;
 		pSourceList source = sel->sources;
 		int source_count = 0;
 		while (source)
@@ -839,6 +860,15 @@ int main(int argc, char **argv)
 	read_locations();
 	info("Searching local packages...",0);
 	add_all_locations();
+	SDL_RWops *file=SDL_RWFromFile("./README.md","r");
+	if (file)
+	{
+		int count = SDL_RWread(file,help,1,MAX_HELP-1);
+		SDL_RWclose(file);
+		help[count-1] = 0;
+		helpBlock = spCreateTextBlock(help,screen->w*9/12,font);
+	}
+	
 
 	spLoop( draw, calc, 10, resize, NULL );
 	spFontDelete(font);
@@ -848,6 +878,8 @@ int main(int argc, char **argv)
 	spDeleteSurface(web_surface);
 	spDeleteSurface(usb_surface);
 	spDeleteSurface(update_surface);
+	if (helpBlock)
+		spDeleteTextBlock(helpBlock);
 	spQuitCore();
 	return 0;
 }
