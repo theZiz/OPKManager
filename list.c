@@ -133,12 +133,12 @@ void read_locations()
 	spFileDeleteList(directoryList);
 	//scripts!
 	directoryList = NULL;
-	spFileGetDirectory(&directoryList,"./repositories",0,1);
+	char buffer[256];
+	spFileGetDirectory(&directoryList,get_path(buffer,"scripts"),0,1);
 	directory = directoryList;
 	while (directory)
 	{
 		//Calling the script:
-		char buffer[256];
 		sprintf(buffer,"%s --register",directory->name);
 		FILE *fp = popen(buffer, "r");
 		if (fp == NULL)
