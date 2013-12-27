@@ -876,7 +876,7 @@ int calc(Uint32 steps)
 				show_move = 0;
 			}
 			else
-				show_copy = 2;
+				show_move = 2;
 			return 0;
 		}
 	}
