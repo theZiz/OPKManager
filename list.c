@@ -15,6 +15,59 @@
   * For feedback and questions about my Files and Projects please mail me,
   * Alexander Matthes (Ziz) , zizsdl_at_googlemail.com */
 
+char* get_path(char* buffer,char* file)
+{
+	sprintf(buffer,"%s/.config/OPKManager/%s",getenv("HOME"),file);
+	return buffer;
+}
+
+void load_repository_list()
+{
+	char buffer[1024];
+	FILE *fp = fopen(get_path(buffer,"repositories.txt"), "r");
+	while (fgets(buffer, 1024, fp) != NULL)
+	{
+		pRepository repository = (pRepository)malloc(sizeof(tRepository));
+		sprintf(repository->url,"%s",buffer);
+		repository->next = repositoryList;
+		repositoryList = repository;
+	}
+	fclose(fp);
+}
+
+void download_new_repositories()
+{
+	char buffer[1024];
+	pRepository repository = repositoryList;
+	while (repository)
+	{
+		sprintf(buffer,"Download %s...",repository->url);
+		info(buffer,1);
+		char random_filename[64];
+		sprintf(random_filename,"/tmp/OPKManager_tmp_%i%i%i%i%i%i%i%i%i%i.script",
+			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10,
+			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10);
+		char filename[256];
+		int i;
+		for (i = strlen(repository->url)-1; i >= 0; i--)
+			if (repository->url[i] == '/')
+				break;
+		sprintf(filename,"sripts/%s",&repository->url[i+1]);
+		sprintf(buffer,WGET" -O %s %s",random_filename,repository->url);
+		if (system(buffer)) //Err0r
+		{
+			sprintf(buffer,"rm %s",random_filename);
+			system(buffer);
+		}
+		else
+		{
+			sprintf(buffer,"mv %s %s",random_filename,get_path(buffer,filename));
+			system(buffer);
+		}
+		repository = repository->next;
+	}
+}
+
 void read_locations()
 {
 	spFileListPointer directoryList = NULL;
@@ -310,6 +363,8 @@ void add_new_web(char* name,char* filename,char* url_addition,char* description,
 
 void update_repositories()
 {
+	char buffer[1024];
+	download_new_repositories();
 	pLocation location = locationList;
 	while (location)
 	{
@@ -318,6 +373,8 @@ void update_repositories()
 			location = location->next;
 			continue;
 		}
+		sprintf(buffer,"Update %s...",location->name);
+		info(buffer,1);
 		FILE *fp = popen(location->update_call, "r");
 		if (fp == NULL)
 		{
@@ -325,7 +382,6 @@ void update_repositories()
 			location = location->next;
 			continue;
 		}
-		char buffer[1024];
 		/* Read the output a line at a time - output it. */
 		char name[256] = "";
 		char filename[256] = "";

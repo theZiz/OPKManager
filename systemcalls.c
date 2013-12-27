@@ -18,6 +18,8 @@
 void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
 {
 	char buffer[2048];
+	sprintf(buffer,"%s%s",to_source->location->url,to_source->fileName);
+	spCreateDirectoryChain(buffer);
 	if (from_source->location->kind == 2)
 	{
 		char random_filename[64];
@@ -25,9 +27,9 @@ void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10,
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10);
 		if (from_source->url_addition)
-			sprintf(buffer,"wget -O %s %s%s%s",random_filename,from_source->location->url,from_source->url_addition,from_source->fileName);
+			sprintf(buffer,WGET" -O %s %s%s%s",random_filename,from_source->location->url,from_source->url_addition,from_source->fileName);
 		else
-			sprintf(buffer,"wget -O %s %s%s",random_filename,from_source->location->url,from_source->fileName);
+			sprintf(buffer,WGET" -O %s %s%s",random_filename,from_source->location->url,from_source->fileName);
 		if (system(buffer)) //Err0r
 		{
 			sprintf(buffer,"rm %s",random_filename);
@@ -53,6 +55,8 @@ void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
 void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_location)
 {
 	char buffer[2048];
+	sprintf(buffer,"%s%s",new_location->url,from_source->fileName);
+	spCreateDirectoryChain(buffer);
 	if (from_source->location->kind == 2)
 	{
 		char random_filename[64];
@@ -60,9 +64,9 @@ void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_loca
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10,
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10);
 		if (from_source->url_addition)
-			sprintf(buffer,"wget -O %s %s%s%s",random_filename,from_source->location->url,from_source->url_addition,from_source->fileName);
+			sprintf(buffer,WGET" -O %s %s%s%s",random_filename,from_source->location->url,from_source->url_addition,from_source->fileName);
 		else
-			sprintf(buffer,"wget -O %s %s%s",random_filename,from_source->location->url,from_source->fileName);
+			sprintf(buffer,WGET" -O %s %s%s",random_filename,from_source->location->url,from_source->fileName);
 		if (system(buffer))
 		{
 			sprintf(buffer,"rm %s",random_filename);
@@ -87,6 +91,8 @@ void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_loca
 void system_move_overwrite(pOpkList sel,pSourceList from_source,pSourceList to_source)
 {
 	char buffer[2048];
+	sprintf(buffer,"%s%s",to_source->location->url,to_source->fileName);
+	spCreateDirectoryChain(buffer);
 	sprintf(buffer,"mv %s%s %s%s",from_source->location->url,from_source->fileName,to_source->location->url,to_source->fileName);
 	system(buffer);
 	
@@ -115,6 +121,8 @@ void system_move_overwrite(pOpkList sel,pSourceList from_source,pSourceList to_s
 void system_move_new(pOpkList opkFile,pSourceList from_source,pLocation new_location)
 {
 	char buffer[2048];
+	sprintf(buffer,"%s%s",new_location->url,from_source->fileName);
+	spCreateDirectoryChain(buffer);
 	sprintf(buffer,"mv %s%s %s%s",from_source->location->url,from_source->fileName,new_location->url,from_source->fileName);
 	system(buffer);
 	from_source->location = new_location;

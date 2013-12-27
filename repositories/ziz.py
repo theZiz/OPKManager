@@ -15,7 +15,7 @@ class RegisterAction(argparse.Action):
 
 class UpdateAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
-		process = subprocess.Popen('wget -qO- http://ziz.gp2x.de/downloads/puzzletube/index.htm',stdout=subprocess.PIPE,shell=True)
+		process = subprocess.Popen('wget --timeout=10 -qO- http://ziz.gp2x.de/downloads/puzzletube/index.htm',stdout=subprocess.PIPE,shell=True)
 		output = process.stdout.read().split('\n')
 		if len(output) > 1:
 			print "[Puzzletube]" #Starts a new entry
@@ -33,7 +33,7 @@ class UpdateAction(argparse.Action):
 			print "description: A puzzle game. On a tube!"#Description. Not needed.
 			print "url_addition: puzzletube/"#Url addition. Not needed.
 			print "" #line breaks make the like beatiful
-		process = subprocess.Popen('wget -qO- http://ziz.gp2x.de/downloads/Sparrow-C4A-Manager/index.htm',stdout=subprocess.PIPE,shell=True)
+		process = subprocess.Popen('wget --timeout=10 -qO- http://ziz.gp2x.de/downloads/Sparrow-C4A-Manager/index.htm',stdout=subprocess.PIPE,shell=True)
 		if len(output) > 1:
 			print "[Sparrow C4A Manager]"
 			output = process.stdout.read().split('\n')

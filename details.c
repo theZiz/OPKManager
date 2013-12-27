@@ -109,7 +109,7 @@ int calc_details(pOpkList sel)
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10,
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10);
 		char buffer[1024];
-		sprintf(buffer,"wget -O %s %s",random_filename,image_url);
+		sprintf(buffer,WGET" -O %s %s",random_filename,image_url);
 		//sprintf(buffer,"cp /home/alexander/develop/handhelds/puzzletube/build/pandora/puzzletube/previews/screenshot1.png %s",random_filename);
 		if (system(buffer) == 0)
 			show_image = spLoadSurface(random_filename);

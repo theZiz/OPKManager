@@ -43,6 +43,8 @@
 #define LIST_BACKGROUND_COLOR spGetRGB(255,255,180)
 #define SELECTED_BACKGROUND_COLOR spGetRGB(185,185,100)
 
+#define WGET "wget --timeout=10"
+
 SDL_Surface* screen;
 SDL_Surface* listSurface = NULL;
 SDL_Surface* sdcard_surface;
@@ -56,6 +58,12 @@ spTextBlockPointer helpBlock = NULL;
 spFontPointer font = NULL;
 spFontPointer font_small = NULL;
 #define ONE_HOUR (60*60)
+
+typedef struct sRepository *pRepository;
+typedef struct sRepository {
+	char url[1024];
+	pRepository next;
+} tRepository;
 
 typedef struct sLocation *pLocation;
 typedef struct sLocation {
@@ -103,6 +111,7 @@ int show_run = 0;
 int show_help = 0;
 pLocation from_sel,to_sel;
 pSourceList from_sel_source,to_sel_source;
+pRepository repositoryList = NULL;
 
 void info(char* buffer,int dimm)
 {
@@ -857,9 +866,22 @@ int main(int argc, char **argv)
 	update_surface = spLoadSurface("./data/update.png");
 	spSetZSet(0);
 	spSetZTest(0);
-	read_locations();
 	info("Searching local packages...",0);
+	read_locations();
 	add_all_locations();
+	//Reading scripts download list
+	char buffer[256];
+	spCreateDirectoryChain(get_path(buffer,"scripts"));
+	if (spFileExists(get_path(buffer,"repositories.txt")) == 0)
+	{
+		FILE *fp = fopen(get_path(buffer,"repositories.txt"), "w");
+		fprintf(fp,"http://ziz.gp2x.de/gcw-repos/ziz.py\n");
+		fprintf(fp,"http://ziz.gp2x.de/gcw-repos/official.py\n");
+		fclose(fp);
+	}
+	load_repository_list();
+	
+	//Reading help
 	SDL_RWops *file=SDL_RWFromFile("./README.md","r");
 	if (file)
 	{

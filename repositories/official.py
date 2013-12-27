@@ -16,7 +16,7 @@ class RegisterAction(argparse.Action):
 
 class UpdateAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
-		process = subprocess.Popen('wget -qO- http://www.gcw-zero.com/downloads',stdout=subprocess.PIPE,shell=True)
+		process = subprocess.Popen('wget --timeout=10 -qO- http://www.gcw-zero.com/downloads',stdout=subprocess.PIPE,shell=True)
 		#process = subprocess.Popen('cat downloads',stdout=subprocess.PIPE,shell=True)
 		output = process.stdout.read().split('<div class="downloads_overview">')
 		for output_part in output:
