@@ -52,7 +52,7 @@ void download_new_repositories()
 		for (i = strlen(repository->url)-1; i >= 0; i--)
 			if (repository->url[i] == '/')
 				break;
-		sprintf(filename,"sripts/%s",&repository->url[i+1]);
+		sprintf(filename,"scripts/%s",&repository->url[i+1]);
 		sprintf(buffer,WGET" -O %s %s",random_filename,repository->url);
 		if (system(buffer)) //Err0r
 		{
