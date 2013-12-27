@@ -18,7 +18,7 @@
 void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
 {
 	char buffer[2048];
-	sprintf(buffer,"%s%s",to_source->location->url,to_source->fileName);
+	sprintf(buffer,"%s",to_source->location->url);
 	spCreateDirectoryChain(buffer);
 	if (from_source->location->kind == 2)
 	{
@@ -55,7 +55,7 @@ void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
 void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_location)
 {
 	char buffer[2048];
-	sprintf(buffer,"%s%s",new_location->url,from_source->fileName);
+	sprintf(buffer,"%s",new_location->url);
 	spCreateDirectoryChain(buffer);
 	if (from_source->location->kind == 2)
 	{
@@ -91,7 +91,7 @@ void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_loca
 void system_move_overwrite(pOpkList sel,pSourceList from_source,pSourceList to_source)
 {
 	char buffer[2048];
-	sprintf(buffer,"%s%s",to_source->location->url,to_source->fileName);
+	sprintf(buffer,"%s",to_source->location->url);
 	spCreateDirectoryChain(buffer);
 	sprintf(buffer,"mv %s%s %s%s",from_source->location->url,from_source->fileName,to_source->location->url,to_source->fileName);
 	system(buffer);
@@ -121,7 +121,7 @@ void system_move_overwrite(pOpkList sel,pSourceList from_source,pSourceList to_s
 void system_move_new(pOpkList opkFile,pSourceList from_source,pLocation new_location)
 {
 	char buffer[2048];
-	sprintf(buffer,"%s%s",new_location->url,from_source->fileName);
+	sprintf(buffer,"%s",new_location->url);
 	spCreateDirectoryChain(buffer);
 	sprintf(buffer,"mv %s%s %s%s",from_source->location->url,from_source->fileName,new_location->url,from_source->fileName);
 	system(buffer);

@@ -15,7 +15,7 @@
   * For feedback and questions about my Files and Projects please mail me,
   * Alexander Matthes (Ziz) , zizsdl_at_googlemail.com */
 
-#define GCW_FEELING
+//#define GCW_FEELING
 
 #if defined GCW_FEELING && defined X86CPU
 	#define TESTING
@@ -355,7 +355,6 @@ int calc(Uint32 steps)
 			result = calc_selection(steps,sel,1,NULL,1);
 			if (result == 2)
 			{
-				show_copy = 2;
 				from_sel = locationList;
 				int i = 0;
 				pSourceList source;
@@ -382,6 +381,34 @@ int calc(Uint32 steps)
 				else
 					copy_is_install = 0;
 				selection_selection = 0;
+				int location_count = 0;
+				pLocation location = locationList;
+				while (location)
+				{
+					if (location->kind != 2 && location != from_sel)
+					{
+						to_sel = location;
+						location_count++;
+					}
+					location = location->next;
+				}
+				if (location_count == 1)
+				{
+					to_sel_source = NULL;
+					source = sel->sources;
+					while (source)
+					{
+						if (source->location == to_sel)
+						{
+							to_sel_source = source;
+							break;
+						}
+						source = source->next;
+					}
+					show_copy = 3;
+				}
+				else
+					show_copy = 2;
 			}
 			else
 			if (result == 0)
@@ -450,7 +477,6 @@ int calc(Uint32 steps)
 			result = calc_selection(steps,sel,1,NULL,0);
 			if (result == 2)
 			{
-				show_move = 2;
 				from_sel = locationList;
 				int i = 0;
 				pSourceList source;
@@ -478,6 +504,34 @@ int calc(Uint32 steps)
 				}
 				from_sel_source = source;
 				selection_selection = 0;
+				int location_count = 0;
+				pLocation location = locationList;
+				while (location)
+				{
+					if (location->kind != 2 && location != from_sel)
+					{
+						to_sel = location;
+						location_count++;
+					}
+					location = location->next;
+				}
+				if (location_count == 1)
+				{
+					to_sel_source = NULL;
+					source = sel->sources;
+					while (source)
+					{
+						if (source->location == to_sel)
+						{
+							to_sel_source = source;
+							break;
+						}
+						source = source->next;
+					}
+					show_move = 3;
+				}
+				else
+					show_move = 2;
 			}
 			else
 			if (result == 0)
@@ -680,7 +734,38 @@ int calc(Uint32 steps)
 			selection_selection = 0;
 			from_sel_source = sel->sources;
 			from_sel = sel->sources->location;
-			show_copy = 2;
+			int location_count = 0;
+			pLocation location = locationList;
+			while (location)
+			{
+				if (location->kind != 2 && location != from_sel)
+				{
+					to_sel = location;
+					location_count++;
+				}
+				location = location->next;
+			}
+			if (location_count == 1)
+			{
+				to_sel_source = NULL;
+				source = sel->sources;
+				while (source)
+				{
+					if (source->location == to_sel)
+					{
+						to_sel_source = source;
+						break;
+					}
+					source = source->next;
+				}
+				printf("Copying from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,from_sel_source->fileName);
+				if (copy_is_install)
+					info("Downloading...",1);
+				system_copy_new(sel,from_sel_source,to_sel);
+				show_copy = 0;
+			}
+			else
+				show_copy = 2;
 			return 0;
 		}
 	}
@@ -762,7 +847,36 @@ int calc(Uint32 steps)
 			selection_selection = 0;
 			from_sel_source = sel->sources;
 			from_sel = sel->sources->location;
-			show_move = 2;
+			int location_count = 0;
+			pLocation location = locationList;
+			while (location)
+			{
+				if (location->kind != 2 && location != from_sel)
+				{
+					to_sel = location;
+					location_count++;
+				}
+				location = location->next;
+			}
+			if (location_count == 1)
+			{
+				to_sel_source = NULL;
+				source = sel->sources;
+				while (source)
+				{
+					if (source->location == to_sel)
+					{
+						to_sel_source = source;
+						break;
+					}
+					source = source->next;
+				}
+				printf("Moving from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,from_sel_source->fileName);
+				system_move_new(sel,from_sel_source,to_sel);
+				show_move = 0;
+			}
+			else
+				show_copy = 2;
 			return 0;
 		}
 	}

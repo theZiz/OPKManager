@@ -283,6 +283,11 @@ void merge_fileList_to_opkList(spFileListPointer fileList,pLocation location)
 				break;
 		char* filename = &(file->name[i+1]);
 		struct OPK* opkFile = opk_open(file->name);
+		if (opkFile == NULL)
+		{
+			file = file->next;
+			continue;
+		}
 		char* longname = NULL;
 		char* description = NULL;
 		const char* metaname;
