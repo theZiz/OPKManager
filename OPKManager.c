@@ -15,6 +15,9 @@
   * For feedback and questions about my Files and Projects please mail me,
   * Alexander Matthes (Ziz) , zizsdl_at_googlemail.com */
 
+//#define PROGRAM_NAME "OPKManager"
+#define PROGRAM_NAME "Puzzletube"
+
 //#define GCW_FEELING
 
 #if defined GCW_FEELING && defined X86CPU
@@ -196,6 +199,10 @@ void draw( void )
 		spSetVerticalOrigin(SP_CENTER);
 		spSetHorizontalOrigin(SP_CENTER);
 		spFontDraw(2+4*16,1+(offset+i)*font->maxheight,0,opk->longName,font);
+		if (strcmp(opk->longName,PROGRAM_NAME) == 0)
+		{
+			spFontDraw(2+4*16+spFontWidth(opk->longName,font)+2,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,"         (uneditable for now)",font_small);
+		}
 		i++;
 		opk = opk->next;
 	}
@@ -709,6 +716,40 @@ int calc(Uint32 steps)
 		show_help = 1;
 		return 0;
 	}
+	if (time_until_next > 0)
+		time_until_next -= steps;
+	if (spGetInput()->axis[1] < 0 && selected > 0)
+	{
+		if (time_until_next <= 0)
+		{
+			selected--;
+			if ((offset+selected)*font->maxheight < 0)
+				offset++;
+			next_in_a_row++;
+			time_until_next = 300/next_in_a_row;
+		}
+	}
+	else
+	if (spGetInput()->axis[1] > 0 && selected < opk_count-1)
+	{
+		if (time_until_next <= 0)
+		{
+			selected++;
+			if ((offset+selected+1)*font->maxheight >= listSurface->h)
+				offset--;
+			next_in_a_row++;
+			time_until_next = 300/next_in_a_row;
+		}
+	}
+	else
+	{
+		time_until_next = 0;
+		next_in_a_row = 0;
+	}
+	if (spGetInput()->button[SP_BUTTON_SELECT_NOWASD])
+		return 1;
+	if (strcmp(sel->longName,PROGRAM_NAME) == 0) //No copy and co of OPKManager itself
+		return 0;
 	if (spGetInput()->button[SP_BUTTON_LEFT_NOWASD] && opk_count>0) //COPY
 	{
 		spGetInput()->button[SP_BUTTON_LEFT_NOWASD] = 0;
@@ -880,38 +921,6 @@ int calc(Uint32 steps)
 			return 0;
 		}
 	}
-	if (time_until_next > 0)
-		time_until_next -= steps;
-	if (spGetInput()->axis[1] < 0 && selected > 0)
-	{
-		if (time_until_next <= 0)
-		{
-			selected--;
-			if ((offset+selected)*font->maxheight < 0)
-				offset++;
-			next_in_a_row++;
-			time_until_next = 300/next_in_a_row;
-		}
-	}
-	else
-	if (spGetInput()->axis[1] > 0 && selected < opk_count-1)
-	{
-		if (time_until_next <= 0)
-		{
-			selected++;
-			if ((offset+selected+1)*font->maxheight >= listSurface->h)
-				offset--;
-			next_in_a_row++;
-			time_until_next = 300/next_in_a_row;
-		}
-	}
-	else
-	{
-		time_until_next = 0;
-		next_in_a_row = 0;
-	}
-	if (spGetInput()->button[SP_BUTTON_SELECT_NOWASD])
-		return 1;
 	return 0;
 }
 
