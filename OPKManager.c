@@ -15,8 +15,7 @@
   * For feedback and questions about my Files and Projects please mail me,
   * Alexander Matthes (Ziz) , zizsdl_at_googlemail.com */
 
-//#define PROGRAM_NAME "OPKManager"
-#define PROGRAM_NAME "Puzzletube"
+#define PROGRAM_NAME "OPKManager"
 
 //#define GCW_FEELING
 
