@@ -18,7 +18,7 @@ Repositories
 ============
 
 Your repositories are scripts, which are stored on your device and online. The scripts tell the OPKManager, which packets exist, where to download them, whether their have images and so on. Your local scripts are stored in /usr/local/home/.config/OPKManager/scripts. The list of your online script locations is created at first start in /usr/local/home/.config/OPKManager/repositories.txt . Via ftp or an editor on the gcw you can edit this file to delete or add repository scripts. Every script in this list will be downloaded to the previously named location. If a script with the same name
-allready exist, it will be overwritten (updated). However if you delete the url in the repositories.txt the script will still be run at runtime as pure local repositories are possible, too. If you don't want this, don't forget to delete the script after editing the repositories.txt.
+allready exist, it will be overwritten (updated). However if you delete the url in the repositories.txt the script will still be used while updating your repositories, beause just local repositories are possible, too. If you don't want this, don't forget to delete the script after editing the repositories.txt.
 
 Closing words
 =============
