@@ -18,7 +18,6 @@ do
 		echo "--> Copy temporary folders"
 		cp -r font "$f/$PROGRAM"
 		cp -r data "$f/$PROGRAM"
-		cp -r repositories "$f/$PROGRAM"
 		cp README.md "$f/$PROGRAM"
 		cd $f
 		echo "--> Create archive"
@@ -47,7 +46,6 @@ do
 		echo "--> Remove temporary folders"
 		rm -r $PROGRAM/font
 		rm -r $PROGRAM/data
-		rm -r $PROGRAM/repositories
 		rm $PROGRAM/README.md
 		cd ..
 		cd ..
