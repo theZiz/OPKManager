@@ -41,7 +41,7 @@ void download_new_repositories()
 	pRepository repository = repositoryList;
 	while (repository)
 	{
-		sprintf(buffer,"Download %s...",repository->url);
+		sprintf(buffer,"Downloading %s...",repository->url);
 		info(buffer,1);
 		char random_filename[64];
 		sprintf(random_filename,"/tmp/OPKManager_tmp_%i%i%i%i%i%i%i%i%i%i.script",
@@ -378,9 +378,10 @@ void update_repositories()
 			location = location->next;
 			continue;
 		}
-		sprintf(buffer,"Update %s...",location->name);
+		sprintf(buffer,"Updating %s...",location->name);
 		info(buffer,1);
-		FILE *fp = popen(location->update_call, "r");
+		sprintf(buffer,"%s %i",location->update_call,TIMEOUT);
+		FILE *fp = popen(buffer, "r");
 		if (fp == NULL)
 		{
 			printf("Failed to run update for %s\n",location->name);

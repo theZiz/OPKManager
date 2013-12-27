@@ -45,7 +45,8 @@
 #define LIST_BACKGROUND_COLOR spGetRGB(255,255,180)
 #define SELECTED_BACKGROUND_COLOR spGetRGB(185,185,100)
 
-#define WGET "wget --timeout=10"
+#define WGET "wget --timeout=5"
+#define TIMEOUT 5
 
 SDL_Surface* screen;
 SDL_Surface* listSurface = NULL;
@@ -454,8 +455,6 @@ int calc(Uint32 steps)
 				else
 				{
 					printf("Copying from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,from_sel_source->fileName);
-					if (copy_is_install)
-						info("Downloading...",1);
 					system_copy_new(sel,from_sel_source,to_sel);
 					show_copy = 0;
 				}
@@ -468,8 +467,6 @@ int calc(Uint32 steps)
 				if (result == 2)
 				{
 					printf("Overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,to_sel_source->fileName);					
-					if (copy_is_install)
-						info("Downloading...",1);
 					system_copy_overwrite(from_sel_source,to_sel_source);
 				}
 				show_copy = 0;
@@ -700,7 +697,6 @@ int calc(Uint32 steps)
 	if (spGetInput()->button[SP_BUTTON_L_NOWASD])
 	{
 		spGetInput()->button[SP_BUTTON_L_NOWASD] = 0;
-		info("Updating repository packages...",1);
 		update_repositories();
 	}
 	if (spGetInput()->button[SP_BUTTON_DOWN_NOWASD] && opk_count>0) //DETAILS
@@ -799,8 +795,6 @@ int calc(Uint32 steps)
 					source = source->next;
 				}
 				printf("Copying from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,from_sel_source->fileName);
-				if (copy_is_install)
-					info("Downloading...",1);
 				system_copy_new(sel,from_sel_source,to_sel);
 				show_copy = 0;
 			}

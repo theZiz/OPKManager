@@ -17,6 +17,10 @@
 
 void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
 {
+	if (from_source->location->kind == 2)
+		info("Downloading...",1);
+	else
+		info("Copying...",1);
 	char buffer[2048];
 	sprintf(buffer,"%s",to_source->location->url);
 	spCreateDirectoryChain(buffer);
@@ -54,6 +58,10 @@ void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
 
 void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_location)
 {
+	if (from_source->location->kind == 2)
+		info("Downloading...",1);
+	else
+		info("Copying...",1);
 	char buffer[2048];
 	sprintf(buffer,"%s",new_location->url);
 	spCreateDirectoryChain(buffer);
@@ -90,6 +98,7 @@ void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_loca
 
 void system_move_overwrite(pOpkList sel,pSourceList from_source,pSourceList to_source)
 {
+	info("Moving...",1);
 	char buffer[2048];
 	sprintf(buffer,"%s",to_source->location->url);
 	spCreateDirectoryChain(buffer);
@@ -120,6 +129,7 @@ void system_move_overwrite(pOpkList sel,pSourceList from_source,pSourceList to_s
 
 void system_move_new(pOpkList opkFile,pSourceList from_source,pLocation new_location)
 {
+	info("Moving...",1);
 	char buffer[2048];
 	sprintf(buffer,"%s",new_location->url);
 	spCreateDirectoryChain(buffer);
@@ -130,6 +140,7 @@ void system_move_new(pOpkList opkFile,pSourceList from_source,pLocation new_loca
 
 void system_delete(pOpkList opkFile,pSourceList from_source)
 {
+	info("Deleting...",1);
 	char buffer[2048];
 	sprintf(buffer,"rm %s%s",from_source->location->url,from_source->fileName);
 	system(buffer);

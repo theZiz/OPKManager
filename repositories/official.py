@@ -16,7 +16,7 @@ class RegisterAction(argparse.Action):
 
 class UpdateAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
-		process = subprocess.Popen('wget --timeout=10 -qO- http://www.gcw-zero.com/downloads',stdout=subprocess.PIPE,shell=True)
+		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://www.gcw-zero.com/downloads',stdout=subprocess.PIPE,shell=True)
 		#process = subprocess.Popen('cat downloads',stdout=subprocess.PIPE,shell=True)
 		output = process.stdout.read().split('<div class="downloads_overview">')
 		for output_part in output:
@@ -53,7 +53,7 @@ class UpdateAction(argparse.Action):
 def main():
 	parser = argparse.ArgumentParser(description="Ziz's Repository script")
 	parser.add_argument('--register', nargs=0, action=RegisterAction)
-	parser.add_argument('--update', nargs=0, action=UpdateAction)
+	parser.add_argument('--update', nargs=1, action=UpdateAction)
 	args = parser.parse_args()
 
 if __name__ == "__main__":
