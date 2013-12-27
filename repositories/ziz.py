@@ -15,40 +15,42 @@ class RegisterAction(argparse.Action):
 
 class UpdateAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
-		print "[Puzzletube]" #Starts a new entry
 		process = subprocess.Popen('wget -qO- http://ziz.gp2x.de/downloads/puzzletube/index.htm',stdout=subprocess.PIPE,shell=True)
 		output = process.stdout.read().split('\n')
-		for line in output:
-			if line.startswith("<a href=puzzletube-gcw"):
-				#searching the filename itself
-				parts = line.split('<a href=')
-				parts = parts[1].split(' ')
-				print "filename: " + parts[0] #NEEDED!
-			if line.startswith("Updated at the "):
-				#Parsing the time
-				parts = line.split('Updated at the ')
-				t = time.strptime(parts[1],"%d.%m.%Y %H:%M:%S .")
-				print "version: " + str(calendar.timegm(t)) #NEEDED!
-		print "description: A puzzle game. On a tube!"#Description. Not needed.
-		print "url_addition: puzzletube/"#Url addition. Not needed.
-		print "" #line breaks make the like beatiful
-		print "[Sparrow C4A Manager]"
+		if len(output) > 1:
+			print "[Puzzletube]" #Starts a new entry
+			for line in output:
+				if line.startswith("<a href=puzzletube-gcw"):
+					#searching the filename itself
+					parts = line.split('<a href=')
+					parts = parts[1].split(' ')
+					print "filename: " + parts[0] #NEEDED!
+				if line.startswith("Updated at the "):
+					#Parsing the time
+					parts = line.split('Updated at the ')
+					t = time.strptime(parts[1],"%d.%m.%Y %H:%M:%S .")
+					print "version: " + str(calendar.timegm(t)) #NEEDED!
+			print "description: A puzzle game. On a tube!"#Description. Not needed.
+			print "url_addition: puzzletube/"#Url addition. Not needed.
+			print "" #line breaks make the like beatiful
 		process = subprocess.Popen('wget -qO- http://ziz.gp2x.de/downloads/Sparrow-C4A-Manager/index.htm',stdout=subprocess.PIPE,shell=True)
-		output = process.stdout.read().split('\n')
-		for line in output:
-			if line.startswith("<a href=Sparrow-C4A-Manager-gcw"):
-				#searching the filename itself
-				parts = line.split('<a href=')
-				parts = parts[1].split(' ')
-				print "filename: " + parts[0] #NEEDED!
-			if line.startswith("Updated at the "):
-				#Parsing the time
-				parts = line.split('Updated at the ')
-				t = time.strptime(parts[1],"%d.%m.%Y %H:%M:%S .")
-				print "version: " + str(calendar.timegm(t)) #NEEDED!
-		print "description: An alternative manager for Compo4All"
-		print "url_addition: Sparrow-C4A-Manager/"
-		print ""
+		if len(output) > 1:
+			print "[Sparrow C4A Manager]"
+			output = process.stdout.read().split('\n')
+			for line in output:
+				if line.startswith("<a href=Sparrow-C4A-Manager-gcw"):
+					#searching the filename itself
+					parts = line.split('<a href=')
+					parts = parts[1].split(' ')
+					print "filename: " + parts[0] #NEEDED!
+				if line.startswith("Updated at the "):
+					#Parsing the time
+					parts = line.split('Updated at the ')
+					t = time.strptime(parts[1],"%d.%m.%Y %H:%M:%S .")
+					print "version: " + str(calendar.timegm(t)) #NEEDED!
+			print "description: An alternative manager for Compo4All"
+			print "url_addition: Sparrow-C4A-Manager/"
+			print ""
 
 def main():
 	parser = argparse.ArgumentParser(description="Ziz's Repository script")
