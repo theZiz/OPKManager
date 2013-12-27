@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=OPKManager
-Comment=A Manager for OPK files. Use it for downloading, copying, moving and deletes opks files.
+Comment=A Manager for OPK files. Use it for downloading, copying, moving and deleting opk files.
 Exec=OPKManager.sh
 Terminal=false
 Type=Application
