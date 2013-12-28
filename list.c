@@ -61,11 +61,68 @@ void download_new_repositories()
 		}
 		else
 		{
-			sprintf(buffer,"mv %s %s",random_filename,get_path(buffer,filename));
+			char buffer2[1024];
+			sprintf(buffer,"mv %s %s",random_filename,get_path(buffer2,filename));
+			system(buffer);
+			sprintf(buffer,"chmod +x %s",get_path(buffer2,filename));
 			system(buffer);
 		}
 		repository = repository->next;
 	}
+	//scripts!
+	spFileListPointer directoryList = NULL;
+	spFileGetDirectory(&directoryList,get_path(buffer,"scripts"),0,1);
+	spFileListPointer directory = directoryList;
+	while (directory)
+	{
+		//Calling the script:
+		sprintf(buffer,"%s --register",directory->name);
+		FILE *fp = popen(buffer, "r");
+		if (fp == NULL)
+		{
+			printf("Failed to run repository script\n" );
+			directory = directory->next;
+			continue;
+		}
+		int i = 0;
+		fgets(buffer, sizeof(buffer), fp);
+		buffer[strlen(buffer)-1] = 0;
+		pLocation loc = locationList;
+		while (loc)
+		{
+			if (strcmp(loc->name,buffer) == 0)
+				break;
+			loc = loc->next;
+		}
+		if (loc == NULL)
+		{
+			loc = (pLocation)malloc(sizeof(tLocation));
+			loc->next = locationList;
+			locationList = loc;
+		}
+		sprintf(loc->name,"%s",buffer);
+		fgets(buffer, 256, fp);
+		if (strcmp(buffer,"web\n") == 0)
+			loc->kind = 2;
+		else
+			loc->kind = 3;
+		fgets(buffer, 256, fp);
+		int l = strlen(buffer)+1;
+		loc->url = (char*)malloc(l);
+		memcpy(loc->url,buffer,l);
+		loc->url[l-2] = 0;
+
+		fgets(buffer, 256, fp);
+		l = strlen(buffer)+1;
+		loc->update_call = (char*)malloc(l);
+		memcpy(loc->update_call,buffer,l);
+		loc->update_call[l-2] = 0;
+
+		pclose(fp);		
+		printf("Found %s (%i): %s\n",loc->name,loc->kind,loc->url);
+		directory = directory->next;
+	}
+	spFileDeleteList(directoryList);
 }
 
 void read_locations()
@@ -127,50 +184,6 @@ void read_locations()
 		loc->update_call = NULL;
 		loc->next = locationList;
 		locationList = loc;
-		printf("Found %s (%i): %s\n",loc->name,loc->kind,loc->url);
-		directory = directory->next;
-	}
-	spFileDeleteList(directoryList);
-	//scripts!
-	directoryList = NULL;
-	char buffer[256];
-	spFileGetDirectory(&directoryList,get_path(buffer,"scripts"),0,1);
-	directory = directoryList;
-	while (directory)
-	{
-		//Calling the script:
-		sprintf(buffer,"%s --register",directory->name);
-		FILE *fp = popen(buffer, "r");
-		if (fp == NULL)
-		{
-			printf("Failed to run repository script\n" );
-			directory = directory->next;
-			continue;
-		}
-		int i = 0;
-		pLocation loc = (pLocation)malloc(sizeof(tLocation));
-		fgets(loc->name, sizeof(loc->name), fp);
-		loc->name[strlen(loc->name)-1] = 0;
-		fgets(buffer, 256, fp);
-		if (strcmp(buffer,"web\n") == 0)
-			loc->kind = 2;
-		else
-			loc->kind = 3;
-		fgets(buffer, 256, fp);
-		int l = strlen(buffer)+1;
-		loc->url = (char*)malloc(l);
-		memcpy(loc->url,buffer,l);
-		loc->url[l-2] = 0;
-
-		fgets(buffer, 256, fp);
-		l = strlen(buffer)+1;
-		loc->update_call = (char*)malloc(l);
-		memcpy(loc->update_call,buffer,l);
-		loc->update_call[l-2] = 0;
-
-		loc->next = locationList;
-		locationList = loc;
-		pclose(fp);		
 		printf("Found %s (%i): %s\n",loc->name,loc->kind,loc->url);
 		directory = directory->next;
 	}
