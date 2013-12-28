@@ -44,7 +44,7 @@ void download_new_repositories()
 		sprintf(buffer,"Downloading %s...",repository->url);
 		info(buffer,1);
 		char random_filename[64];
-		sprintf(random_filename,"/tmp/OPKManager_tmp_%i%i%i%i%i%i%i%i%i%i.script",
+		sprintf(random_filename,"/tmp/OPKManager_tmp_%i%i%i%i%i%i%i%i%i%i.py",
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10,
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10);
 		char filename[256];
@@ -64,8 +64,8 @@ void download_new_repositories()
 			char buffer2[1024];
 			sprintf(buffer,"mv %s %s",random_filename,get_path(buffer2,filename));
 			system(buffer);
-			sprintf(buffer,"chmod +x %s",get_path(buffer2,filename));
-			system(buffer);
+			//sprintf(buffer,"chmod +x %s",get_path(buffer2,filename));
+			//system(buffer);
 		}
 		repository = repository->next;
 	}
@@ -76,7 +76,7 @@ void download_new_repositories()
 	while (directory)
 	{
 		//Calling the script:
-		sprintf(buffer,"%s --register",directory->name);
+		sprintf(buffer,"python %s --register",directory->name);
 		FILE *fp = popen(buffer, "r");
 		if (fp == NULL)
 		{
