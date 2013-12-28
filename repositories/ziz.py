@@ -11,7 +11,7 @@ class RegisterAction(argparse.Action):
 		print "Ziz's Repository" # Name
 		print "web" # Type (maybe web for web, or anything else for usb)
 		print "http://ziz.gp2x.de/downloads/" #URL
-		print "./repositories/ziz.py --update" #Call for updating the list
+		print "ziz.py --update" #Call for updating the list
 
 class UpdateAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):

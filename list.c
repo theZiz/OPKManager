@@ -64,8 +64,8 @@ void download_new_repositories()
 			char buffer2[1024];
 			sprintf(buffer,"mv %s %s",random_filename,get_path(buffer2,filename));
 			system(buffer);
-			//sprintf(buffer,"chmod +x %s",get_path(buffer2,filename));
-			//system(buffer);
+			sprintf(buffer,"chmod +x %s",get_path(buffer2,filename));
+			system(buffer);
 		}
 		repository = repository->next;
 	}
@@ -76,7 +76,7 @@ void download_new_repositories()
 	while (directory)
 	{
 		//Calling the script:
-		sprintf(buffer,"python %s --register",directory->name);
+		sprintf(buffer,"%s --register",directory->name);
 		FILE *fp = popen(buffer, "r");
 		if (fp == NULL)
 		{
@@ -393,7 +393,8 @@ void update_repositories()
 		}
 		sprintf(buffer,"Updating %s...",location->name);
 		info(buffer,1);
-		sprintf(buffer,"%s %i",location->update_call,TIMEOUT);
+		char buffer2[1024];
+		sprintf(buffer,"%s/%s %i",get_path(buffer2,"scripts"),location->update_call,TIMEOUT);
 		FILE *fp = popen(buffer, "r");
 		if (fp == NULL)
 		{

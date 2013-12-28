@@ -12,7 +12,7 @@ class RegisterAction(argparse.Action):
 		print "Official Repository" # Name
 		print "web" # Type (maybe web for web, or anything else for usb)
 		print "http://www.gcw-zero.com/files/upload/opk/" #URL
-		print "./repositories/official.py --update" #Call for updating the list
+		print "official.py --update" #Call for updating the list
 
 class UpdateAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
