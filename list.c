@@ -35,6 +35,20 @@ void load_repository_list()
 	fclose(fp);
 }
 
+void load_alias_list()
+{
+	char buffer[1024];
+	FILE *fp = fopen(get_path(buffer,"alias.txt"), "r");
+	while (fgets(buffer, 1024, fp) != NULL)
+	{
+		pRepository alias = (pRepository)malloc(sizeof(tRepository));
+		sprintf(alias->url,"%s",buffer);
+		alias->next = aliasRepositoryList;
+		aliasRepositoryList = alias;
+	}
+	fclose(fp);
+}
+
 void download_new_repositories()
 {
 	char buffer[1024];
@@ -118,11 +132,141 @@ void download_new_repositories()
 		memcpy(loc->update_call,buffer,l);
 		loc->update_call[l-2] = 0;
 
+		fgets(buffer, 256, fp);
+		loc->letter = buffer[0];
+
 		pclose(fp);		
 		printf("Found %s (%i): %s\n",loc->name,loc->kind,loc->url);
 		directory = directory->next;
 	}
 	spFileDeleteList(directoryList);
+}
+
+void download_new_alias()
+{
+	char buffer[1024];
+	pRepository alias = aliasRepositoryList;
+	while (alias)
+	{
+		sprintf(buffer,"Downloading %s...",alias->url);
+		info(buffer,1);
+		char random_filename[64];
+		sprintf(random_filename,"/tmp/OPKManager_tmp_%i%i%i%i%i%i%i%i%i%i.txt",
+			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10,
+			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10);
+		char filename[256];
+		int i;
+		for (i = strlen(alias->url)-1; i >= 0; i--)
+			if (alias->url[i] == '/')
+				break;
+		sprintf(filename,"alias/%s",&alias->url[i+1]);
+		sprintf(buffer,WGET" -O %s %s",random_filename,alias->url);
+		if (system(buffer)) //Err0r
+		{
+			sprintf(buffer,"rm %s",random_filename);
+			system(buffer);
+		}
+		else
+		{
+			char buffer2[1024];
+			sprintf(buffer,"mv %s %s",random_filename,get_path(buffer2,filename));
+			system(buffer);
+		}
+		alias = alias->next;
+	}
+}
+
+void add_alias(char* name,char* alias_name)
+{
+	//Searching alias_name
+	pAlias alias = aliasList;
+	while (alias)
+	{
+		if (strcmp(alias->alias_name,alias_name) == 0)
+			return;
+		alias = alias->next;
+	}
+	alias = (pAlias)malloc(sizeof(tAlias));
+	sprintf(alias->name,"%s",name);
+	sprintf(alias->alias_name,"%s",alias_name);
+	alias->next = aliasList;
+	aliasList = alias;
+}
+
+void remove_all_alias()
+{
+	while (aliasList)
+	{
+		pAlias next = aliasList->next;
+		free(aliasList);
+		aliasList = next;
+	}
+}
+
+void update_alias()
+{
+	remove_all_alias();
+	spFileListPointer directoryList = NULL;
+	char buffer[1024];
+	spFileGetDirectory(&directoryList,get_path(buffer,"alias"),0,1);
+	spFileListPointer directory = directoryList;
+	while (directory)
+	{
+		//Opening and reading the alias
+		sprintf(buffer,"Reading alias %s...",directory->name);
+		info(buffer,1);
+		char buffer2[1024];
+		FILE *fp = fopen(directory->name, "r");
+		if (fp == NULL)
+		{
+			directory = directory->next;
+			continue;
+		}
+		char name[256] = "";
+		while (fgets(buffer, 1024, fp) != NULL)
+		{
+			if (buffer[0] == '\n') //line break, skip
+				continue;
+			int l = strlen(buffer);
+			buffer[l-1] = 0;
+			l--;
+			if (buffer[0] == '[') //new entry
+			{
+				char* end_character = strchr(buffer,']');
+				if (end_character)
+					end_character[0] = 0;
+				else
+					return; //This file is corrupted!
+				memcpy(name,&(buffer[1]),l-1);
+				add_alias(name,name); //self adding
+			}
+			else
+			{
+				if (name[0] == 0) //No header? Corrupted!
+					return;
+				add_alias(name,buffer);
+			}
+		}
+		fclose(fp);
+		directory = directory->next;
+	}
+	spFileDeleteList(directoryList);
+	//Using the alias list to change the names in the list, if already there
+	pOpkList opk = opkList;
+	while (opk)
+	{
+		pAlias alias = aliasList;
+		while (alias)
+		{
+			if (strcmp(alias->alias_name,opk->longName) == 0)
+			{
+				sprintf(opk->longName,"%s",alias->name);
+				break;
+			}
+			alias = alias->next;
+		}
+		opk = opk->next;
+	}
 }
 
 void read_locations()
@@ -208,6 +352,7 @@ pSourceList add_new_source(pOpkList file,pLocation location,char* filename,Sint6
 		newSource->image_url = NULL;
 		newSource->fileName = NULL;
 		newSource->description = NULL;
+		newSource->block = NULL;
 		newSource->next = file->sources;
 		file->sources = newSource;
 	}
@@ -238,7 +383,17 @@ pSourceList add_new_source(pOpkList file,pLocation location,char* filename,Sint6
 pSourceList add_new_file(char* longname,char* filename,pLocation location,Sint64 version,char* description)
 {
 	pOpkList newOpk = (pOpkList)malloc(sizeof(tOpkList));
-	sprintf(newOpk->longName,"%s",longname);
+	pAlias alias = aliasList;
+	while (alias)
+	{
+		if (strcmp(alias->alias_name,longname) == 0)
+			break;
+		alias = alias->next;
+	}
+	if (alias)
+		sprintf(newOpk->longName,"%s",alias->name);
+	else
+		sprintf(newOpk->longName,"%s",longname);
 	int i;
 	for (i = 0; newOpk->longName[i] != 0; i++)
 	{
@@ -271,17 +426,29 @@ pSourceList add_new_file(char* longname,char* filename,pLocation location,Sint64
 
 pSourceList add_file_to_opkList(char* longname,char* filename,pLocation location,Sint64 version,char* description)
 {
+	pAlias alias = aliasList;
+	while (alias)
+	{
+		if (strcmp(alias->alias_name,longname) == 0)
+			break;
+		alias = alias->next;
+	}
+	char* test;
+	if (alias)
+		test = alias->name;
+	else
+		test = longname;
 	//Searching in the opkList
 	pOpkList file = opkList;
 	while (file)
 	{
-		if (strcmp(file->longName,longname) == 0)
+		if (strcmp(file->longName,test) == 0)
 			break;
 		file = file->next;
 	}
 	if (file) //found
 		return add_new_source(file,location,filename,version,description);
-	return add_new_file(longname,filename,location,version,description);
+	return add_new_file(test,filename,location,version,description);
 }
 
 void merge_fileList_to_opkList(spFileListPointer fileList,pLocation location)

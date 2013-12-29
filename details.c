@@ -49,7 +49,11 @@ void draw_details(pOpkList sel)
 		{
 			case 0: spBlitSurface(RIGHT_TEXT+7,y+7,0,internal_surface); break;
 			case 1: spBlitSurface(RIGHT_TEXT+7,y+7,0,sdcard_surface); break;
-			case 2: spBlitSurface(RIGHT_TEXT+7,y+7,0,web_surface); break;
+			case 2:
+				spBlitSurface(RIGHT_TEXT+7,y+7,0,web_surface);
+				sprintf(buffer,"%c",source->location->letter);
+				spFontDrawMiddle(RIGHT_TEXT+8,y+1,0,buffer,font_small);
+				break;
 			case 3: spBlitSurface(RIGHT_TEXT+7,y+7,0,usb_surface); break;
 		}
 		//struct tm* myTime = gmtime ((time_t*)&(source->version));

@@ -113,11 +113,16 @@ void draw_selection(char* caption,pOpkList sel, int show, pLocation except_locat
 		if (i == selection_selection)
 			spRectangle(screen->w/2+1,y+font->maxheight/2,0,screen->w*5/6-4,font->maxheight,SELECTED_BACKGROUND_COLOR);
 		sprintf(buffer," %s",location->name);
+		char buffer2[2];
 		switch (location->kind)
 		{
 			case 0: spBlitSurface(screen->w/2-spFontWidth(buffer,font)/2,y+7,0,internal_surface); break;
 			case 1: spBlitSurface(screen->w/2-spFontWidth(buffer,font)/2,y+7,0,sdcard_surface); break;
-			case 2: spBlitSurface(screen->w/2-spFontWidth(buffer,font)/2,y+7,0,web_surface); break;
+			case 2:
+				spBlitSurface(screen->w/2-spFontWidth(buffer,font)/2,y+7,0,web_surface);
+				sprintf(buffer2,"%c",location->letter);
+				spFontDrawMiddle(screen->w/2-spFontWidth(buffer,font)/2+1,y+1,0,buffer2,font_small);
+				break;
 			case 3: spBlitSurface(screen->w/2-spFontWidth(buffer,font)/2,y+7,0,usb_surface); break;
 		}
 		spFontDrawMiddle(screen->w/2+7,y,0,buffer,font);

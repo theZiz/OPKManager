@@ -36,7 +36,7 @@
 #else
 	#define ROOT "./test"
 #endif
-#define VERSION "0.8.0"
+#define VERSION "0.9.5"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
 #define FONT_SIZE 11
 #define FONT_SIZE_SMALL 9
@@ -68,12 +68,20 @@ typedef struct sRepository {
 	pRepository next;
 } tRepository;
 
+typedef struct sAlias *pAlias;
+typedef struct sAlias {
+	char name[256];
+	char alias_name[256];
+	pAlias next;
+} tAlias;
+
 typedef struct sLocation *pLocation;
 typedef struct sLocation {
 	char name[256];
 	int kind; //0 internal, 1 sdcard, 2 internet, 3 usb
 	char* url; //according to kind something like "/media/data/apps/" or an url
 	char* update_call;
+	char letter;
 	pLocation next;
 } tLocation;
 
@@ -115,6 +123,8 @@ int show_help = 0;
 pLocation from_sel,to_sel;
 pSourceList from_sel_source,to_sel_source;
 pRepository repositoryList = NULL;
+pRepository aliasRepositoryList = NULL;
+pAlias aliasList = NULL;
 
 void info(char* buffer,int dimm)
 {
@@ -135,6 +145,26 @@ int offset = 0;
 
 void draw( void )
 {
+	int location_count = 0;
+	pLocation loc = locationList;
+	while (loc)
+	{
+		if (loc->kind == 2)
+			location_count++;
+		loc = loc->next;
+	}
+	pLocation location[location_count+1];
+	location_count = 0;
+	loc = locationList;
+	while (loc)
+	{
+		if (loc->kind == 2)
+		{
+			location_count++;
+			location[location_count] = loc;
+		}
+		loc = loc->next;
+	}
 	//filling the list
 	spSelectRenderTarget(listSurface);
 	spClearTarget( LIST_BACKGROUND_COLOR );
@@ -150,8 +180,10 @@ void draw( void )
 			spRectangle(0,1+(offset+i)*font->maxheight,0,screen->w-2,font->maxheight,SELECTED_BACKGROUND_COLOR);
 			sel = opk;
 		}
-		int sdcard = 0, internal = 0, web = 0, usb = 0;;
-		int sdcard_u = 0, internal_u = 0, web_u = 0, usb_u = 0;
+		int sdcard = 0, internal = 0, web[location_count+1], usb = 0;;
+		int sdcard_u = 0, internal_u = 0, web_u[location_count+1], usb_u = 0;
+		memset(web,0,sizeof(int)*(location_count+1));
+		memset(web_u,0,sizeof(int)*(location_count+1));
 		pSourceList source = opk->sources;
 		Sint64 oldest = 0;
 		while (source)
@@ -163,11 +195,16 @@ void draw( void )
 		source = opk->sources;
 		while (source)
 		{
+			int j;
 			switch (source->location->kind)
 			{
 				case 0: internal = 1; break;
 				case 1: sdcard = 1; break;
-				case 2: web = 1; break;
+				case 2: 
+					for (j = 1; j <= location_count; j++)
+						if (location[j] == source->location)
+							web[j] = 1;
+					break;
 				case 3: usb = 1; break;
 			}
 			if (oldest!= 0 && oldest+ONE_HOUR < source->version)
@@ -175,33 +212,52 @@ void draw( void )
 				{
 					case 0: internal_u = 1; break;
 					case 1: sdcard_u = 1; break;
-					case 2: web_u = 1; break;
+					case 2: 
+						for (j = 1; j <= location_count; j++)
+							if (location[j] == source->location)
+								web_u[j] = 1;
+						break;
 					case 3: usb_u = 1; break;
 				}
 			source = source->next;
 		}
+		int x = 0;
 		if (internal)
-			spBlitSurface(2+0*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,internal_surface);
+			spBlitSurface(2+x*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,internal_surface);
 		if (internal_u)
-			spBlitSurface(2+0*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
+			spBlitSurface(2+x*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
+		x++;
 		if (sdcard)
-			spBlitSurface(2+1*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,sdcard_surface);
+			spBlitSurface(2+x*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,sdcard_surface);
 		if (sdcard_u)
-			spBlitSurface(2+1*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
+			spBlitSurface(2+x*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
+		x++;
 		if (usb)
-			spBlitSurface(2+2*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,usb_surface);
+			spBlitSurface(2+x*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,usb_surface);
 		if (usb_u)
-			spBlitSurface(2+2*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
-		if (web)
-			spBlitSurface(2+3*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,web_surface);
-		if (web_u)
-			spBlitSurface(2+3*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
+			spBlitSurface(2+x*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
+		x++;
+		int j;
+		for (j = 1; j <= location_count; j++)
+		{
+			if (web[j])
+				spBlitSurface(2+x*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,web_surface);
+			if (web_u[j])
+				spBlitSurface(2+x*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
+			if (web[j])
+			{
+				char buffer[2];
+				sprintf(buffer,"%c",location[j]->letter);
+				spFontDrawMiddle(2+x*16+2,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight-8,0,buffer,font_small);
+			}
+			x++;
+		}
 		spSetVerticalOrigin(SP_CENTER);
 		spSetHorizontalOrigin(SP_CENTER);
-		spFontDraw(2+4*16,1+(offset+i)*font->maxheight,0,opk->longName,font);
+		spFontDraw(2+x*16,1+(offset+i)*font->maxheight,0,opk->longName,font);
 		if (strcmp(opk->longName,PROGRAM_NAME) == 0)
 		{
-			spFontDraw(2+4*16+spFontWidth(opk->longName,font)+2,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,"         (uneditable for now)",font_small);
+			spFontDraw(2+x*16+spFontWidth(opk->longName,font)+2,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,"         (uneditable for now)",font_small);
 		}
 		i++;
 		opk = opk->next;
@@ -697,6 +753,8 @@ int calc(Uint32 steps)
 	if (spGetInput()->button[SP_BUTTON_L_NOWASD])
 	{
 		spGetInput()->button[SP_BUTTON_L_NOWASD] = 0;
+		download_new_alias();
+		update_alias();
 		update_repositories();
 	}
 	if (spGetInput()->button[SP_BUTTON_DOWN_NOWASD] && opk_count>0) //DETAILS
@@ -811,7 +869,10 @@ int calc(Uint32 steps)
 		while (source)
 		{
 			if (source->location->kind != 2)
+			{
+				from_sel_source = source;
 				source_count++;
+			}
 			source = source->next;
 		}
 		if (source_count > 1)
@@ -824,8 +885,7 @@ int calc(Uint32 steps)
 		if (source_count == 1)
 		{
 			selection_selection = 0;
-			from_sel_source = sel->sources;
-			from_sel = sel->sources->location;
+			from_sel = from_sel_source->location;
 			show_delete = 3;
 			return 0;
 		}
@@ -838,7 +898,10 @@ int calc(Uint32 steps)
 		while (source)
 		{
 			if (source->location->kind != 2)
+			{
+				from_sel_source = source;
 				source_count++;
+			}
 			source = source->next;
 		}
 		if (source_count > 1)
@@ -851,8 +914,7 @@ int calc(Uint32 steps)
 		if (source_count == 1)
 		{
 			selection_selection = 0;
-			from_sel_source = sel->sources;
-			from_sel = sel->sources->location;
+			from_sel = from_sel_source->location;
 			printf("Running %s%s\n",from_sel_source->location->url,from_sel_source->fileName);
 			system_run(sel,from_sel_source);
 			return 0;
@@ -866,7 +928,10 @@ int calc(Uint32 steps)
 		while (source)
 		{
 			if (source->location->kind != 2)
+			{
+				from_sel_source = source;
 				source_count++;
+			}
 			source = source->next;
 		}
 		if (source_count > 1)
@@ -879,8 +944,7 @@ int calc(Uint32 steps)
 		if (source_count == 1)
 		{
 			selection_selection = 0;
-			from_sel_source = sel->sources;
-			from_sel = sel->sources->location;
+			from_sel = from_sel_source->location;
 			int location_count = 0;
 			pLocation location = locationList;
 			while (location)
@@ -996,6 +1060,16 @@ int main(int argc, char **argv)
 		fclose(fp);
 	}
 	load_repository_list();
+	
+	spCreateDirectoryChain(get_path(buffer,"alias"));
+	if (spFileExists(get_path(buffer,"alias.txt")) == 0)
+	{
+		FILE *fp = fopen(get_path(buffer,"alias.txt"), "w");
+		fprintf(fp,"http://ziz.gp2x.de/gcw-repos/predefined.txt\n");
+		fclose(fp);
+	}
+	load_alias_list();
+	update_alias();
 	
 	//Reading help
 	SDL_RWops *file=SDL_RWFromFile("./README.md","r");

@@ -12,6 +12,7 @@ class RegisterAction(argparse.Action):
 		print "web" # Type (maybe web for web, or anything else for usb)
 		print "http://ziz.gp2x.de/downloads/" #URL
 		print "ziz.py --update" #Call for updating the list
+		print "Z" #letter to show
 
 class UpdateAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
