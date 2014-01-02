@@ -15,7 +15,31 @@
   * For feedback and questions about my Files and Projects please mail me,
   * Alexander Matthes (Ziz) , zizsdl_at_googlemail.com */
 
-void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
+void update_newest_version(pOpkList file)
+{
+	file->newest_version = 0;
+	pSourceList source = file->sources;
+	while (source)
+	{
+		if (file->newest_version < source->version)
+			file->newest_version = source->version;
+		source = source->next;
+	}
+}
+
+void update_biggest_size(pOpkList file)
+{
+	file->biggest_size = 0;
+	pSourceList source = file->sources;
+	while (source)
+	{
+		if (file->biggest_size < source->size)
+			file->biggest_size = source->size;
+		source = source->next;
+	}
+}
+
+void system_copy_overwrite(pOpkList opkFile,pSourceList from_source,pSourceList to_source)
 {
 	if (from_source->location->kind == 2)
 		info("Downloading...",1);
@@ -52,8 +76,10 @@ void system_copy_overwrite(pSourceList from_source,pSourceList to_source)
 		sprintf(buffer,"cp --preserve=all %s%s %s%s",from_source->location->url,from_source->fileName,to_source->location->url,to_source->fileName);
 		system(buffer);
 	}
-	system(buffer);
 	to_source->version = from_source->version;
+	to_source->size = from_source->size;
+	update_newest_version(opkFile);
+	update_biggest_size(opkFile);
 }
 
 void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_location)
@@ -125,6 +151,8 @@ void system_move_overwrite(pOpkList sel,pSourceList from_source,pSourceList to_s
 	free(to_source->description);
 	spDeleteTextBlock(to_source->block);
 	free(to_source);
+	update_newest_version(sel);
+	update_biggest_size(sel);
 }
 
 void system_move_new(pOpkList opkFile,pSourceList from_source,pLocation new_location)
@@ -182,6 +210,11 @@ void system_delete(pOpkList opkFile,pSourceList from_source)
 			selected--;
 		opk_count--;
 		free(opkFile);
+	}
+	else
+	{
+		update_newest_version(opkFile);
+		update_biggest_size(opkFile);
 	}
 }
 

@@ -17,7 +17,9 @@
 
 #define PROGRAM_NAME "OPKManager"
 
-//#define GCW_FEELING
+#include <sys/stat.h>
+
+#define GCW_FEELING
 
 #if defined GCW_FEELING && defined X86CPU
 	#define TESTING
@@ -36,7 +38,7 @@
 #else
 	#define ROOT "./test"
 #endif
-#define VERSION "0.9.5"
+#define VERSION "0.9.7"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
 #define FONT_SIZE 11
 #define FONT_SIZE_SMALL 9
@@ -94,6 +96,7 @@ typedef struct sSourceList {
 	pLocation location;
 	char* url_addition;
 	char* image_url;
+	int size;
 	pSourceList next;
 } tSourcelist;
 
@@ -101,12 +104,16 @@ typedef struct sOpkList *pOpkList;
 typedef struct sOpkList {
 	char longName[1024];
 	char smallLongName[1024];
+	int newest_version;
+	int biggest_size;
 	pSourceList sources;
 	pOpkList next;
+	pOpkList sortedNext;
 } tOpkList;
 
 pLocation locationList = NULL;
 pOpkList opkList = NULL;
+pOpkList sortedOpkList = NULL;
 int selected = 0;
 int next_in_a_row = 0;
 int time_until_next = 0;
@@ -125,6 +132,7 @@ pSourceList from_sel_source,to_sel_source;
 pRepository repositoryList = NULL;
 pRepository aliasRepositoryList = NULL;
 pAlias aliasList = NULL;
+int sorting = 0;
 
 void info(char* buffer,int dimm)
 {
@@ -169,7 +177,7 @@ void draw( void )
 	spSelectRenderTarget(listSurface);
 	spClearTarget( LIST_BACKGROUND_COLOR );
 	int i = 0;
-	pOpkList opk = opkList;
+	pOpkList opk = sortedOpkList;
 	pOpkList sel = NULL;
 	while (opk)
 	{
@@ -242,25 +250,35 @@ void draw( void )
 		{
 			if (web[j])
 				spBlitSurface(2+x*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,web_surface);
-			if (web_u[j])
-				spBlitSurface(2+x*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
 			if (web[j])
 			{
 				char buffer[2];
 				sprintf(buffer,"%c",location[j]->letter);
 				spFontDrawMiddle(2+x*16+2,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight-8,0,buffer,font_small);
 			}
+			if (web_u[j])
+				spBlitSurface(2+x*16,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,update_surface);
 			x++;
 		}
 		spSetVerticalOrigin(SP_CENTER);
 		spSetHorizontalOrigin(SP_CENTER);
 		spFontDraw(2+x*16,1+(offset+i)*font->maxheight,0,opk->longName,font);
 		if (strcmp(opk->longName,PROGRAM_NAME) == 0)
+			spFontDraw(2+x*16+spFontWidth(opk->longName,font)+2,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0," (uneditable for now)",font_small);
+		if (opk->biggest_size > 0)
 		{
-			spFontDraw(2+x*16+spFontWidth(opk->longName,font)+2,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,"         (uneditable for now)",font_small);
+			char buffer[256];
+			if (opk->biggest_size < 1024)
+				sprintf(buffer,"max. size: %iB",opk->biggest_size);
+			else
+			if (opk->biggest_size < 1024*1024)
+				sprintf(buffer,"max. size: %ikB",opk->biggest_size/1024);
+			else
+				sprintf(buffer,"max. size: %.1fMB",(float)opk->biggest_size/(1024.0f*1024.0f));
+			spFontDraw(listSurface->w*3/4,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0,buffer,font_small);
 		}
 		i++;
-		opk = opk->next;
+		opk = opk->sortedNext;
 	}
 	if (listSurface->h/font->maxheight-opk_count < 0 && offset != listSurface->h/font->maxheight-opk_count)
 	{
@@ -279,10 +297,25 @@ void draw( void )
 	spSelectRenderTarget(spGetWindowSurface());
 	spClearTarget( BACKGROUND_COLOR );
 	spFontDrawMiddle(screen->w/2,0,0,"OPKManager",font);
+	char buffer[256];
+	switch (sorting)
+	{
+		case 0:
+			sprintf(buffer,"Sorting by: Name");
+			break;
+		case 1:
+			sprintf(buffer,"Sorting by: Version / Date");
+			break;
+		case 2:
+			sprintf(buffer,"Sorting by: Size");
+			break;
+	}
+	spFontDraw(2,2*font->maxheight-2,0,buffer,font);
+	spFontDraw(2+spFontWidth(buffer,font),2*font->maxheight,0," (Use left and right to change the sorting)",font_small);
 	int way = 7;
 	spBlitSurface(way,3*font->maxheight/2,0,internal_surface);
 	way+=7;
-	spFontDraw(way,font->maxheight,0,": internal ",font);
+	spFontDraw(way,font->maxheight,0,": internal",font);
 	way+=spFontWidth(": internal ",font);
 	way+=7;
 	spBlitSurface(way,3*font->maxheight/2,0,sdcard_surface);
@@ -292,20 +325,20 @@ void draw( void )
 	way+=7;
 	spBlitSurface(way,3*font->maxheight/2,0,usb_surface);
 	way+=7;
-	spFontDraw(way,font->maxheight,0,": usb ",font);
-	way+=spFontWidth(": usb  ",font);
+	spFontDraw(way,font->maxheight,0,": usb",font);
+	way+=spFontWidth(": usb ",font);
 	way+=7;
 	spBlitSurface(way,3*font->maxheight/2,0,web_surface);
 	way+=7;
-	spFontDraw(way,font->maxheight,0,": repository ",font);
-	way+=spFontWidth(": repository ",font);
+	spFontDraw(way,font->maxheight,0,": repository",font);
+	way+=spFontWidth(": repository",font);
 	way+=7;
 	spBlitSurface(way,3*font->maxheight/2,0,update_surface);
 	way+=7;
 	spFontDraw(way,font->maxheight,0,": newer version",font);	spSetVerticalOrigin(SP_TOP);
 	spSetHorizontalOrigin(SP_LEFT);
-	spBlitSurface( 1, font->maxheight*2,0,listSurface);
-	spRectangleBorder( 0,font->maxheight*2,0,listSurface->w+2,listSurface->h+2,1,1,FONT_COLOR);
+	spBlitSurface( 1, font->maxheight*3-2,0,listSurface);
+	spRectangleBorder( 0,font->maxheight*3-2,0,listSurface->w+2,listSurface->h+2,1,1,FONT_COLOR);
 	spSetVerticalOrigin(SP_CENTER);
 	spSetHorizontalOrigin(SP_CENTER);
 
@@ -324,7 +357,7 @@ void draw( void )
 		draw_details(sel);
 	if (show_help)
 		draw_help();
-	char buffer[256],buffer2[256];
+	char buffer2[256];
 	switch (show_copy)
 	{
 		case 1:
@@ -390,7 +423,78 @@ void draw( void )
 
 int calc(Uint32 steps)
 {
+	//Reset Sorting
 	pOpkList opk = opkList;
+	while (opk)
+	{
+		opk->sortedNext = NULL;
+		opk = opk->next;
+	}
+	//Setting sorted next
+	pOpkList temp = NULL;
+	pOpkList before = NULL;
+	switch (sorting)
+	{
+		case 0: //easist
+			opk = opkList;
+			while (opk)
+			{
+				opk->sortedNext = opk->next;
+				opk = opk->next;
+			}
+			sortedOpkList = opkList;
+			break;
+		case 1: //version
+			sortedOpkList = NULL;
+			opk = opkList;
+			while (opk)
+			{
+				//sorted insert
+				temp = sortedOpkList;
+				before = NULL;
+				while (temp)
+				{
+					if (temp->newest_version < opk->newest_version)
+						break;
+					before = temp;
+					temp = temp->sortedNext;
+				}
+				if (before)
+					before->sortedNext = opk;
+				else
+					sortedOpkList = opk;
+				opk->sortedNext = temp;
+				opk = opk->next;
+			}
+			break;
+		case 2: //size
+			sortedOpkList = NULL;
+			opk = opkList;
+			while (opk)
+			{
+				//sorted insert
+				temp = sortedOpkList;
+				before = NULL;
+				while (temp)
+				{
+					if (temp->biggest_size < opk->biggest_size)
+						break;
+					before = temp;
+					temp = temp->sortedNext;
+				}
+				if (before)
+					before->sortedNext = opk;
+				else
+					sortedOpkList = opk;
+				opk->sortedNext = temp;
+				opk = opk->next;
+			}
+			break;	}
+		
+	
+	
+	
+	opk = sortedOpkList;
 	pOpkList sel = NULL;
 	int i = 0;
 	while (opk)
@@ -398,7 +502,7 @@ int calc(Uint32 steps)
 		if (i == selected)
 			sel = opk;
 		i++;
-		opk = opk->next;
+		opk = opk->sortedNext;
 	}
 	if (show_details)
 	{
@@ -523,7 +627,7 @@ int calc(Uint32 steps)
 				if (result == 2)
 				{
 					printf("Overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,to_sel_source->fileName);					
-					system_copy_overwrite(from_sel_source,to_sel_source);
+					system_copy_overwrite(sel,from_sel_source,to_sel_source);
 				}
 				show_copy = 0;
 			}
@@ -799,6 +903,17 @@ int calc(Uint32 steps)
 		time_until_next = 0;
 		next_in_a_row = 0;
 	}
+	if (spGetInput()->axis[0] < 0)
+	{
+		spGetInput()->axis[0] = 0;
+		sorting = (sorting+2)%3;
+	}
+	if (spGetInput()->axis[0] > 0)
+	{
+		spGetInput()->axis[0] = 0;
+		sorting = (sorting+1)%3;
+	}
+	
 	if (spGetInput()->button[SP_BUTTON_SELECT_NOWASD])
 		return 1;
 	if (strcmp(sel->longName,PROGRAM_NAME) == 0) //No copy and co of OPKManager itself
@@ -1027,7 +1142,7 @@ void resize(Uint16 w,Uint16 h)
   if (listSurface)
 		spDeleteSurface(listSurface);
 	listSurface = spCreateSurface(w-2,
-	                              h-1*font->maxheight-4*font_small->maxheight);
+	                              h-1*font->maxheight-5*font_small->maxheight);
 
 }
 

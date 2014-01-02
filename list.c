@@ -21,6 +21,20 @@ char* get_path(char* buffer,char* file)
 	return buffer;
 }
 
+void update_size(pSourceList source)
+{
+	if (source->location->kind == 2)
+	{
+		source->size = 0;
+		return;
+	}
+	char filename[512];
+	sprintf(filename,"%s%s",source->location->url,source->fileName);
+	struct stat st;
+	stat(filename, &st);
+	source->size = st.st_size;	
+}
+
 void load_repository_list()
 {
 	char buffer[1024];
@@ -295,21 +309,42 @@ void read_locations()
 			else
 			{
 				char buffer[1024];
+				int error = 0;
 				while (fgets(buffer, 1024, fp) != NULL)
 				{
-					if (strstr(buffer,"/dev/mmc") == buffer) //starts with it
+					if (strstr(buffer,"/dev/mmcblk0p1") == buffer) //root partition in /media?
 					{
 						//search for the mount point
 						char* space_place = strchr(buffer,' ');
 						if (space_place)
 						{
 							space_place++;
-							if (strstr(space_place,directory->name) == space_place) //starts with
+							if (strstr(space_place,directory->name) == space_place)
+							{
+								error = 1;
+								break;
+							}
+						}
+					}
+					if (strstr(buffer,"/dev/mmc") == buffer) //starts with mmc
+					{
+						//search for the mount point
+						char* space_place = strchr(buffer,' ');
+						if (space_place)
+						{
+							space_place++;
+							if (strstr(space_place,directory->name) == space_place)
 								yes = 1;
 						}
 					}
 				}
-				fclose(fp);		
+				fclose(fp);
+				if (error)
+				{
+					free(loc);
+					directory = directory->next;
+					continue;
+				}
 			}
 			if (yes)
 #endif
@@ -377,6 +412,11 @@ pSourceList add_new_source(pOpkList file,pLocation location,char* filename,Sint6
 		newSource->block = spCreateTextBlock(description,screen->w/2,font);
 	}
 	newSource->version = version;
+	if (file->newest_version < version)
+		file->newest_version = version;
+	update_size(newSource);
+	if (file->biggest_size < newSource->size)
+		file->biggest_size = newSource->size;
 	return newSource;
 }
 
@@ -404,6 +444,8 @@ pSourceList add_new_file(char* longname,char* filename,pLocation location,Sint64
 	}
 	newOpk->smallLongName[i] = 0;
 	newOpk->sources = NULL;
+	newOpk->newest_version = 0;
+	newOpk->biggest_size = 0;
 	pSourceList result = add_new_source(newOpk,location,filename,version,description);
 	//Searching the first, which is bigger
 	pOpkList bigger = opkList;

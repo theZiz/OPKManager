@@ -63,6 +63,18 @@ void draw_details(pOpkList sel)
 		y+=distance/2;
 		sprintf(buffer,"Filename: \"%s\"",source->fileName);
 		spFontDraw     (RIGHT_TEXT,y+5,0,buffer,font_small);
+		if (source->size > 0)
+		{
+			y+=distance/2;
+			if (source->size < 1024)
+				sprintf(buffer,"Size: %iB",source->size);
+			else
+			if (source->size < 1024*1024)
+				sprintf(buffer,"Size: %ikB",source->size/1024);
+			else
+				sprintf(buffer,"Size: %.1fMB",(float)source->size/(1024.0f*1024.0f));
+			spFontDraw     (RIGHT_TEXT,y+5,0,buffer,font_small);
+		}
 		y+=distance;
 		if (source->block)
 			block = source->block;

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Change the folder to YOUR sparrow3d folder!
 PROGRAM="OPKManager"
-VERSION="0.9.5.0"
+VERSION="0.9.7.0"
 DEST=./build/gcw
 echo "<html>" > index.htm
 echo "<head>" >> index.htm
@@ -33,9 +33,9 @@ do
 				echo "<a href=$PROGRAM-$NAME-$VERSION.tar.gz>$NAME</a></br>" >> ../../index.htm
 			else
 				if [ $NAME = "gcw" ]; then
-					mksquashfs * "$PROGRAM-$NAME-$VERSION.opk" -all-root -noappend -no-exports -no-xattrs
-					mv "$PROGRAM-$NAME-$VERSION.opk" ../..
-					echo "<a href=$PROGRAM-$NAME-$VERSION.opk type=\"application/x-opk+squashfs\">$NAME</a></br>" >> ../../index.htm
+					mksquashfs * "$PROGRAM.opk" -all-root -noappend -no-exports -no-xattrs
+					mv "$PROGRAM.opk" ../..
+					echo "<a href=$PROGRAM.opk type=\"application/x-opk+squashfs\">Download Version $VERSION</a></br>" >> ../../index.htm
 				else
 					zip -r "$PROGRAM-$NAME-$VERSION.zip" * > /dev/null
 					mv "$PROGRAM-$NAME-$VERSION.zip" ../..
