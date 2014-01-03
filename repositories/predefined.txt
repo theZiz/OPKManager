@@ -1,0 +1,40 @@
+[Astro Lander]
+AstroLander
+
+[Biniax 2]
+Biniax2
+
+[Block Rage]
+Blockrage
+
+[Dink Smallwood]
+Dink Smallw.
+
+[DosBox]
+DOSBox 0.74
+
+[Fceux]
+Fceux 2.2.2
+
+[Free Doom]
+FreeDoom
+
+[Mine Sweeper]
+MineSweeper
+
+[ReGBA]
+ReGBA 1.45.2
+
+[Sparrow C4A Manager]
+Sp. C4A Manager
+
+[Super Tux]
+Supertux
+SuperTux
+
+[Unnamed Monkey Game]
+Unnamed Monkey Game (exclusive preview)
+UMG
+
+[Wireless Connect]
+Wireless
