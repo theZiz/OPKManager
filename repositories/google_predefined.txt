@@ -1,0 +1,65 @@
+[Cave Story]
+cavestory
+
+[Descent II]
+d2x-rebirth
+
+[EDuke32]
+eduke32
+
+[Fceux]
+fceu320
+
+[Gambatte]
+gambatte
+
+[Gmu]
+gmu
+
+[GNUBoy]
+gnuboy
+
+[GPMark]
+gpmark
+
+[gpSP]
+gpsp
+
+[Heroes]
+heroes_wip
+
+[Hexen II]
+hexen2
+
+[Liero]
+liero_wip
+
+[Mice in Joy]
+mice
+
+[OhBoy]
+ohboy_20121211
+
+[OpenBOR]
+openbor
+
+[Picodrive]
+PicoDrive-1.91
+
+[PrBoom]
+prboom
+
+[R. of the Triad]
+rott
+
+[Snes9x4d]
+snes9x4d
+
+[UnrealSpeccy]
+unreal_speccy_portable
+
+[Uzem]
+uzem
+
+[WebPlay]
+webplay
