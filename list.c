@@ -386,6 +386,7 @@ pSourceList add_new_source(pOpkList file,pLocation location,char* filename,Sint6
 		newSource->url_addition = NULL;	
 		newSource->image_url = NULL;
 		newSource->fileName = NULL;
+		newSource->download_fileName = NULL;
 		newSource->description = NULL;
 		newSource->long_description = NULL;
 		newSource->block = NULL;
@@ -578,7 +579,7 @@ void add_all_locations()
 	}	
 }
 
-void add_new_web(char* name,char* filename,char* url_addition,char* description,char* long_description,Sint64 version,pLocation loc,char* image_url)
+void add_new_web(char* name,char* filename,char* url_addition,char* description,char* long_description,Sint64 version,pLocation loc,char* image_url,char* download_filename)
 {
 	pSourceList source = add_file_to_opkList(name,filename,loc,version,description[0]?description:NULL,long_description[0]?long_description:NULL);
 	if (url_addition[0])
@@ -597,11 +598,20 @@ void add_new_web(char* name,char* filename,char* url_addition,char* description,
 		source->image_url = (char*)malloc(k);
 		memcpy(source->image_url,image_url,k);
 	}
+	if (download_filename[0])
+	{
+		if (source->download_fileName)
+			free(source->download_fileName);
+		int k = strlen(download_filename)+1;
+		source->download_fileName = (char*)malloc(k);
+		memcpy(source->download_fileName,download_filename,k);
+	}
 	printf("Added: %s, Version %s       %s%s%s\n       %s\n       %s\n",name,ctime((time_t*)&(version)),loc->url,url_addition,filename,description,image_url);
 	description[0] = 0;
 	long_description[0] = 0;
 	url_addition[0] = 0;
 	image_url[0] = 0;
+	download_filename[0] = 0;
 }
 
 void update_repositories()
@@ -630,6 +640,7 @@ void update_repositories()
 		/* Read the output a line at a time - output it. */
 		char name[256] = "";
 		char filename[256] = "";
+		char download_filename[256] = "";
 		char url_addition[256] = "";
 		char description[1024] = "";
 		char long_description[65536] = "";
@@ -645,7 +656,7 @@ void update_repositories()
 			if (buffer[0] == '[') //new entry
 			{
 				if (name[0]) //Adding old entry
-					add_new_web(name,filename,url_addition,description,long_description,version,location,image_url);
+					add_new_web(name,filename,url_addition,description,long_description,version,location,image_url,download_filename);
 				char* end_character = strchr(buffer,']');
 				if (end_character)
 					end_character[0] = 0;
@@ -694,12 +705,15 @@ void update_repositories()
 				if (strcmp(key,"filename") == 0)
 					sprintf(filename,"%s",value);
 				else
+				if (strcmp(key,"download_filename") == 0)
+					sprintf(download_filename,"%s",value);
+				else
 				if (strcmp(key,"image_url") == 0)
 					sprintf(image_url,"%s",value);
 			}
 		}
 		if (name[0]) //Adding last entry
-			add_new_web(name,filename,url_addition,description,long_description,version,location,image_url);
+			add_new_web(name,filename,url_addition,description,long_description,version,location,image_url,download_filename);
 		pclose(fp);		
 		location = location->next;
 	}

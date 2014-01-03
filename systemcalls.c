@@ -41,30 +41,53 @@ void update_biggest_size(pOpkList file)
 
 void system_copy_overwrite(pOpkList opkFile,pSourceList from_source,pSourceList to_source)
 {
-	if (from_source->location->kind == 2)
-		info("Downloading...",1);
-	else
+	if (from_source->location->kind != 2)
 		info("Copying...",1);
+	else
+	{
+		char buffer2[2048];
+		sprintf(buffer2,"Downloading %s",opkFile->longName);
+		info(buffer2,0);
+	}
 	char buffer[2048];
 	sprintf(buffer,"%s",to_source->location->url);
 	spCreateDirectoryChain(buffer);
 	if (from_source->location->kind == 2)
 	{
 		char random_filename[64];
-		sprintf(random_filename,"/tmp/OPKManager_tmp_%i%i%i%i%i%i%i%i%i%i.opk",
+		sprintf(random_filename,"%sOPKManager_tmp_%i%i%i%i%i%i%i%i%i%i.opk.part",to_source->location->url,
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10,
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10);
+		char* download_filename = from_source->download_fileName;
+		if (download_filename == NULL)
+			download_filename = from_source->fileName;
 		if (from_source->url_addition)
-			sprintf(buffer,WGET" -O %s %s%s%s",random_filename,from_source->location->url,from_source->url_addition,from_source->fileName);
+			sprintf(buffer,WGET" -O %s %s%s%s"PROGRESS_MAGIC,random_filename,from_source->location->url,from_source->url_addition,download_filename);
 		else
-			sprintf(buffer,WGET" -O %s %s%s",random_filename,from_source->location->url,from_source->fileName);
-		if (system(buffer)) //Err0r
+			sprintf(buffer,WGET" -O %s %s%s"PROGRESS_MAGIC,random_filename,from_source->location->url,download_filename);
+		FILE *fp = popen(buffer, "r");
+		while (fgets(buffer, 2048, fp) != NULL)
+		{
+			printf("%s",buffer);
+			char* percent = strchr(buffer,'%');
+			if (percent)
+			{
+				percent-=3;
+				percent[3] = 0;
+				char buffer2[2048];
+				sprintf(buffer2,"Downloading %s\n%s%%",opkFile->longName,percent);
+				info(buffer2,0);
+			}
+		}
+		if (pclose(fp)) //Err0r
 		{
 			sprintf(buffer,"rm %s",random_filename);
 			system(buffer);
 			show_error = 1;
 			return;
 		}
+		else
+			show_error = 2;
 		sprintf(buffer,"mv %s %s%s",random_filename,to_source->location->url,to_source->fileName);
 		system(buffer);
 		struct tm* myTime = localtime ((time_t*)&(from_source->version));
@@ -73,7 +96,9 @@ void system_copy_overwrite(pOpkList opkFile,pSourceList from_source,pSourceList 
 	}
 	else
 	{
-		sprintf(buffer,"cp --preserve=all %s%s %s%s",from_source->location->url,from_source->fileName,to_source->location->url,to_source->fileName);
+		sprintf(buffer,"cp %s%s %s%s",from_source->location->url,from_source->fileName,to_source->location->url,to_source->fileName);
+		system(buffer);
+		sprintf(buffer,"touch -r %s%s %s%s",from_source->location->url,from_source->fileName,to_source->location->url,to_source->fileName);
 		system(buffer);
 	}
 	to_source->version = from_source->version;
@@ -84,30 +109,53 @@ void system_copy_overwrite(pOpkList opkFile,pSourceList from_source,pSourceList 
 
 void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_location)
 {
-	if (from_source->location->kind == 2)
-		info("Downloading...",1);
-	else
+	if (from_source->location->kind != 2)
 		info("Copying...",1);
+	else
+	{
+		char buffer2[2048];
+		sprintf(buffer2,"Downloading %s",opkFile->longName);
+		info(buffer2,0);
+	}
 	char buffer[2048];
 	sprintf(buffer,"%s",new_location->url);
 	spCreateDirectoryChain(buffer);
 	if (from_source->location->kind == 2)
 	{
 		char random_filename[64];
-		sprintf(random_filename,"/tmp/OPKManager_tmp_%i%i%i%i%i%i%i%i%i%i.opk",
+		sprintf(random_filename,"%sOPKManager_tmp_%i%i%i%i%i%i%i%i%i%i.opk.part",new_location->url,
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10,
 			rand()%10,rand()%10,rand()%10,rand()%10,rand()%10);
+		char* download_filename = from_source->download_fileName;
+		if (download_filename == NULL)
+			download_filename = from_source->fileName;
 		if (from_source->url_addition)
-			sprintf(buffer,WGET" -O %s %s%s%s",random_filename,from_source->location->url,from_source->url_addition,from_source->fileName);
+			sprintf(buffer,WGET" -O %s %s%s%s"PROGRESS_MAGIC,random_filename,from_source->location->url,from_source->url_addition,download_filename);
 		else
-			sprintf(buffer,WGET" -O %s %s%s",random_filename,from_source->location->url,from_source->fileName);
-		if (system(buffer))
+			sprintf(buffer,WGET" -O %s %s%s"PROGRESS_MAGIC,random_filename,from_source->location->url,download_filename);
+		FILE *fp = popen(buffer, "r");
+		while (fgets(buffer, 2048, fp) != NULL)
+		{
+			printf("%s",buffer);
+			char* percent = strchr(buffer,'%');
+			if (percent)
+			{
+				percent-=3;
+				percent[3] = 0;
+				char buffer2[2048];
+				sprintf(buffer2,"Downloading %s\n%s%%",opkFile->longName,percent);
+				info(buffer2,0);
+			}
+		}
+		if (pclose(fp)) //Err0r
 		{
 			sprintf(buffer,"rm %s",random_filename);
 			system(buffer);
 			show_error = 1;
 			return;
 		}
+		else
+			show_error = 2;
 		sprintf(buffer,"mv %s %s%s",random_filename,new_location->url,from_source->fileName);
 		system(buffer);
 		struct tm* myTime = localtime ((time_t*)&(from_source->version));
@@ -116,7 +164,9 @@ void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_loca
 	}
 	else
 	{
-		sprintf(buffer,"cp --preserve=all %s%s %s",from_source->location->url,from_source->fileName,new_location->url);
+		sprintf(buffer,"cp %s%s %s",from_source->location->url,from_source->fileName,new_location->url);
+		system(buffer);
+		sprintf(buffer,"touch -r %s%s %s%s",from_source->location->url,from_source->fileName,new_location->url,from_source->fileName);
 		system(buffer);
 	}
 	add_new_source(opkFile,new_location,from_source->fileName,from_source->version,from_source->description,from_source->long_description);

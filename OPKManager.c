@@ -38,7 +38,7 @@
 #else
 	#define ROOT "./test"
 #endif
-#define VERSION "0.9.8"
+#define VERSION "0.9.10.1"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
 #define FONT_SIZE 11
 #define FONT_SIZE_SMALL 9
@@ -47,7 +47,8 @@
 #define LIST_BACKGROUND_COLOR spGetRGB(255,255,180)
 #define SELECTED_BACKGROUND_COLOR spGetRGB(185,185,100)
 
-#define WGET "wget --timeout=5"
+#define WGET "wget --progress=dot --no-check-certificate --timeout=5"
+#define PROGRESS_MAGIC " 2>&1"
 #define TIMEOUT 5
 
 SDL_Surface* screen;
@@ -90,6 +91,7 @@ typedef struct sLocation {
 typedef struct sSourceList *pSourceList;
 typedef struct sSourceList {
 	Sint64 version;
+	char* download_fileName;
 	char* fileName;
 	char* description;
 	spTextBlockPointer block;
@@ -266,7 +268,7 @@ void draw( void )
 		spSetHorizontalOrigin(SP_CENTER);
 		spFontDraw(2+x*16,1+(offset+i)*font->maxheight,0,opk->longName,font);
 		if (strcmp(opk->longName,PROGRAM_NAME) == 0)
-			spFontDraw(2+x*16+spFontWidth(opk->longName,font)+2,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0," (uneditable for now)",font_small);
+			spFontDraw(2+x*16+spFontWidth(opk->longName,font)+2,1+(offset+i)*font->maxheight+font->maxheight-font_small->maxheight,0," (uncopyable)",font_small);
 		if (opk->biggest_size > 0)
 		{
 			char buffer[256];
@@ -419,6 +421,12 @@ void draw( void )
 		case 1:
 			draw_sure("Connection error!","Coudln't download'",sel->longName,"Maybe no network connection?",1);
 			break;
+		case 2:
+			draw_sure("","Download of",sel->longName,"succeded.",1);
+			break;
+		case 3:
+			draw_sure("","You can't copy",PROGRAM_NAME,"",1);
+			break;
 	}
 	spFlip();
 }
@@ -544,6 +552,13 @@ int calc(Uint32 steps)
 					}
 					from_sel = from_sel->next;
 				}
+				if (from_sel->kind != 2 && strcmp(sel->longName,PROGRAM_NAME) == 0)
+				{
+					show_copy = 0;
+					show_error = 3;
+					return 0;
+				}
+				
 				from_sel_source = source;
 				if (from_sel->kind == 2)
 					copy_is_install = 1;
@@ -574,7 +589,14 @@ int calc(Uint32 steps)
 						}
 						source = source->next;
 					}
-					show_copy = 3;
+					if (to_sel_source)
+						show_copy = 3;
+					else
+					{
+						printf("Copying from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,from_sel_source->fileName);
+						system_copy_new(sel,from_sel_source,to_sel);
+						show_copy = 0;
+					}
 				}
 				else
 					show_copy = 2;
@@ -918,8 +940,6 @@ int calc(Uint32 steps)
 	
 	if (spGetInput()->button[SP_BUTTON_SELECT_NOWASD])
 		return 1;
-	if (strcmp(sel->longName,PROGRAM_NAME) == 0) //No copy and co of OPKManager itself
-		return 0;
 	if (spGetInput()->button[SP_BUTTON_LEFT_NOWASD] && opk_count>0) //COPY
 	{
 		spGetInput()->button[SP_BUTTON_LEFT_NOWASD] = 0;
@@ -958,6 +978,13 @@ int calc(Uint32 steps)
 			}
 			if (location_count == 1)
 			{
+				if (from_sel->kind != 2 && strcmp(sel->longName,PROGRAM_NAME) == 0)
+				{
+					show_copy = 0;
+					show_error = 3;
+					return 0;
+				}
+				
 				to_sel_source = NULL;
 				source = sel->sources;
 				while (source)
@@ -1007,36 +1034,7 @@ int calc(Uint32 steps)
 			return 0;
 		}
 	}
-	if (spGetInput()->button[SP_BUTTON_START_NOWASD] && opk_count>0) //RUN
-	{
-		spGetInput()->button[SP_BUTTON_START_NOWASD] = 0;
-		pSourceList source = sel->sources;
-		int source_count = 0;
-		while (source)
-		{
-			if (source->location->kind != 2)
-			{
-				from_sel_source = source;
-				source_count++;
-			}
-			source = source->next;
-		}
-		if (source_count > 1)
-		{
-			selection_selection = 0;
-			show_run = 1;
-			return 0;
-		}
-		else
-		if (source_count == 1)
-		{
-			selection_selection = 0;
-			from_sel = from_sel_source->location;
-			printf("Running %s%s\n",from_sel_source->location->url,from_sel_source->fileName);
-			system_run(sel,from_sel_source);
-			return 0;
-		}
-	}
+
 	if (spGetInput()->button[SP_BUTTON_RIGHT_NOWASD] && opk_count>0) //MOVE
 	{
 		spGetInput()->button[SP_BUTTON_RIGHT_NOWASD] = 0;
@@ -1093,6 +1091,38 @@ int calc(Uint32 steps)
 			else
 			if (location_count != 0)
 				show_move = 2;
+			return 0;
+		}
+	}
+	if (strcmp(sel->longName,PROGRAM_NAME) == 0) //No copy and co of OPKManager itself
+		return 0;
+	if (spGetInput()->button[SP_BUTTON_START_NOWASD] && opk_count>0) //RUN
+	{
+		spGetInput()->button[SP_BUTTON_START_NOWASD] = 0;
+		pSourceList source = sel->sources;
+		int source_count = 0;
+		while (source)
+		{
+			if (source->location->kind != 2)
+			{
+				from_sel_source = source;
+				source_count++;
+			}
+			source = source->next;
+		}
+		if (source_count > 1)
+		{
+			selection_selection = 0;
+			show_run = 1;
+			return 0;
+		}
+		else
+		if (source_count == 1)
+		{
+			selection_selection = 0;
+			from_sel = from_sel_source->location;
+			printf("Running %s%s\n",from_sel_source->location->url,from_sel_source->fileName);
+			system_run(sel,from_sel_source);
 			return 0;
 		}
 	}

@@ -1,13 +1,13 @@
 #!/bin/sh
 # Change the folder to YOUR sparrow3d folder!
 PROGRAM="OPKManager"
-VERSION="0.9.8.0"
+VERSION="0.9.10.1"
 DEST=./build/gcw
 echo "<html>" > index.htm
 echo "<head>" >> index.htm
 echo "</head>" >> index.htm
 echo "<body>" >> index.htm
-TIME=`date -u +"%d.%m.%Y %r"`
+TIME=`date -u +"%d.%m.%Y %R"`
 echo "Updated at the $TIME." >> index.htm
 echo "<h1>$PROGRAM download links:</h1>" >> index.htm
 for f in $DEST

@@ -52,6 +52,25 @@ class UpdateAction(argparse.Action):
 			print "description: An alternative manager for Compo4All"
 			print "url_addition: Sparrow-C4A-Manager/"
 			print ""
+		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/OPKManager/index.htm',stdout=subprocess.PIPE,shell=True)
+		if len(output) > 1:
+			print "[OPKManager]"
+			output = process.stdout.read().split('\n')
+			for line in output:
+				if line.startswith("<a href="):
+					#searching the filename itself
+					parts = line.split('<a href=')
+					parts = parts[1].split(' ')
+					print "filename: " + parts[0] #NEEDED!
+				if line.startswith("Updated at the "):
+					#Parsing the time
+					parts = line.split('Updated at the ')
+					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
+					print "version: " + str(calendar.timegm(t)) #NEEDED!
+			print "description: A manager for all your opk files"
+			print "long_description: OPK Manager is a manager for OPK files. You can:\\n* Copy opk files\\n* Move opk files\\n* Delete opk files\\n* Install new opk files via internet\\n* See descriptions\\n* See the installation date\\n* See screenshots"
+			print "url_addition: OPKManager/"
+			print ""
 
 def main():
 	parser = argparse.ArgumentParser(description="Ziz's Repository script")
