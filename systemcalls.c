@@ -119,7 +119,7 @@ void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_loca
 		sprintf(buffer,"cp --preserve=all %s%s %s",from_source->location->url,from_source->fileName,new_location->url);
 		system(buffer);
 	}
-	add_new_source(opkFile,new_location,from_source->fileName,from_source->version,from_source->description);
+	add_new_source(opkFile,new_location,from_source->fileName,from_source->version,from_source->description,from_source->long_description);
 }
 
 void system_move_overwrite(pOpkList sel,pSourceList from_source,pSourceList to_source)
@@ -149,7 +149,9 @@ void system_move_overwrite(pOpkList sel,pSourceList from_source,pSourceList to_s
 	else
 		sel->sources = to_source->next;
 	free(to_source->description);
+	free(to_source->long_description);
 	spDeleteTextBlock(to_source->block);
+	spDeleteTextBlock(to_source->long_block);
 	free(to_source);
 	update_newest_version(sel);
 	update_biggest_size(sel);
@@ -188,7 +190,9 @@ void system_delete(pOpkList opkFile,pSourceList from_source)
 		opkFile->sources = from_source->next;
 	free(from_source->fileName);
 	free(from_source->description);
+	free(from_source->long_description);
 	spDeleteTextBlock(from_source->block);
+	spDeleteTextBlock(from_source->long_block);
 	free(from_source);
 	//Deleting opkFile, when sources are empty
 	if (opkFile->sources == NULL)
@@ -208,6 +212,18 @@ void system_delete(pOpkList opkFile,pSourceList from_source)
 			opkList = opkFile->next;
 		if (opkFile->next == NULL) //was last
 			selected--;
+		//same for sorting list
+		while (opk)
+		{
+			if (opk == opkFile)
+				break;
+			before = opk;
+			opk = opk->sortedNext;
+		}
+		if (before)
+			before->sortedNext = opkFile->sortedNext;
+		else
+			sortedOpkList = opkFile->sortedNext;
 		opk_count--;
 		free(opkFile);
 	}

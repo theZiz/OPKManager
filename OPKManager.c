@@ -38,7 +38,7 @@
 #else
 	#define ROOT "./test"
 #endif
-#define VERSION "0.9.7"
+#define VERSION "0.9.8"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
 #define FONT_SIZE 11
 #define FONT_SIZE_SMALL 9
@@ -96,6 +96,8 @@ typedef struct sSourceList {
 	pLocation location;
 	char* url_addition;
 	char* image_url;
+	char* long_description;
+	spTextBlockPointer long_block;
 	int size;
 	pSourceList next;
 } tSourcelist;
@@ -356,7 +358,7 @@ void draw( void )
 	if (show_details)
 		draw_details(sel);
 	if (show_help)
-		draw_help();
+		draw_help(helpBlock);
 	char buffer2[256];
 	switch (show_copy)
 	{
@@ -506,12 +508,12 @@ int calc(Uint32 steps)
 	}
 	if (show_details)
 	{
-		show_details = calc_details(sel);
+		show_details = calc_details(sel,steps);
 		return 0;
 	}
 	if (show_help)
 	{
-		show_help = calc_help(steps);
+		show_help = calc_help(helpBlock,steps);
 		return 0;
 	}
 	int result;
@@ -1089,6 +1091,7 @@ int calc(Uint32 steps)
 				show_move = 0;
 			}
 			else
+			if (location_count != 0)
 				show_move = 2;
 			return 0;
 		}

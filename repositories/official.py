@@ -6,6 +6,7 @@ import argparse
 import time
 import calendar
 import string
+import sys
 
 class RegisterAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
@@ -34,6 +35,7 @@ class UpdateAction(argparse.Action):
 			l = len(part)
 			found_version = 0
 			found_image = 0
+			found_long = 0;
 			for i in range(0,l-1):
 				if string.find(part[i],'Publication Date') != -1:
 					version = part[i+1]
@@ -46,9 +48,19 @@ class UpdateAction(argparse.Action):
 					image = part[i];
 					image = image.split("background-image: url('")[1].split("');")[0];
 					print "image_url: http://www.gcw-zero.com/" + image
-					found_image = 1
-				if (found_version and found_image):
+				if string.find(part[i],'<p class="more fade">') != -1:
+					long_description = part[i];
+					long_description = long_description.split('<p class="more fade">')[1].split("</p>")[0];
+					long_description = long_description.replace('<br /> ','\\n')
+					long_description = long_description.split('>')
+					sys.stdout.write("long_description: ")
+					for long_description_part in long_description:
+						sys.stdout.write(long_description_part.split('<')[0])
+					sys.stdout.write('\n')
+					found_long = 1
+				if (found_version and found_image and found_long):
 					break
+			print ""
 		
 
 def main():

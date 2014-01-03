@@ -369,7 +369,7 @@ void read_locations()
 	spFileDeleteList(directoryList);
 }
 
-pSourceList add_new_source(pOpkList file,pLocation location,char* filename,Sint64 version,char* description)
+pSourceList add_new_source(pOpkList file,pLocation location,char* filename,Sint64 version,char* description,char* long_description)
 {
 	//Source already in file?
 	pSourceList newSource = file->sources;
@@ -387,7 +387,9 @@ pSourceList add_new_source(pOpkList file,pLocation location,char* filename,Sint6
 		newSource->image_url = NULL;
 		newSource->fileName = NULL;
 		newSource->description = NULL;
+		newSource->long_description = NULL;
 		newSource->block = NULL;
+		newSource->long_block = NULL;
 		newSource->next = file->sources;
 		file->sources = newSource;
 	}
@@ -411,6 +413,18 @@ pSourceList add_new_source(pOpkList file,pLocation location,char* filename,Sint6
 		memcpy(newSource->description,description,l);
 		newSource->block = spCreateTextBlock(description,screen->w/2,font);
 	}
+	if (long_description)
+	{
+		if (newSource->long_description)
+		{
+			free(newSource->long_description);
+			spDeleteTextBlock(newSource->long_block);
+		}
+		int l = strlen(long_description)+1;
+		newSource->long_description = (char*)malloc(l);
+		memcpy(newSource->long_description,long_description,l);
+		newSource->long_block = spCreateTextBlock(long_description,screen->w*9/12,font);
+	}
 	newSource->version = version;
 	if (file->newest_version < version)
 		file->newest_version = version;
@@ -420,7 +434,7 @@ pSourceList add_new_source(pOpkList file,pLocation location,char* filename,Sint6
 	return newSource;
 }
 
-pSourceList add_new_file(char* longname,char* filename,pLocation location,Sint64 version,char* description)
+pSourceList add_new_file(char* longname,char* filename,pLocation location,Sint64 version,char* description,char* long_description)
 {
 	pOpkList newOpk = (pOpkList)malloc(sizeof(tOpkList));
 	pAlias alias = aliasList;
@@ -446,7 +460,7 @@ pSourceList add_new_file(char* longname,char* filename,pLocation location,Sint64
 	newOpk->sources = NULL;
 	newOpk->newest_version = 0;
 	newOpk->biggest_size = 0;
-	pSourceList result = add_new_source(newOpk,location,filename,version,description);
+	pSourceList result = add_new_source(newOpk,location,filename,version,description,long_description);
 	//Searching the first, which is bigger
 	pOpkList bigger = opkList;
 	pOpkList smaller = NULL;
@@ -466,7 +480,7 @@ pSourceList add_new_file(char* longname,char* filename,pLocation location,Sint64
 	return result;
 }
 
-pSourceList add_file_to_opkList(char* longname,char* filename,pLocation location,Sint64 version,char* description)
+pSourceList add_file_to_opkList(char* longname,char* filename,pLocation location,Sint64 version,char* description,char* long_description)
 {
 	pAlias alias = aliasList;
 	while (alias)
@@ -489,8 +503,8 @@ pSourceList add_file_to_opkList(char* longname,char* filename,pLocation location
 		file = file->next;
 	}
 	if (file) //found
-		return add_new_source(file,location,filename,version,description);
-	return add_new_file(test,filename,location,version,description);
+		return add_new_source(file,location,filename,version,description,long_description);
+	return add_new_file(test,filename,location,version,description,long_description);
 }
 
 void merge_fileList_to_opkList(spFileListPointer fileList,pLocation location)
@@ -512,6 +526,7 @@ void merge_fileList_to_opkList(spFileListPointer fileList,pLocation location)
 		}
 		char* longname = NULL;
 		char* description = NULL;
+		char* long_description = NULL;
 		const char* metaname;
 		opk_open_metadata(opkFile, &metaname);
 		const char *key, *val;
@@ -540,7 +555,7 @@ void merge_fileList_to_opkList(spFileListPointer fileList,pLocation location)
 			longname = (char*)malloc(strlen("Error while reading applications name!")+1);
 			sprintf(longname,"Error while reading applications name!");
 		}
-		add_file_to_opkList(longname,filename,location,file->last_mod,description);
+		add_file_to_opkList(longname,filename,location,file->last_mod,description,NULL);
 		file = file->next;
 	}
 }
@@ -563,9 +578,9 @@ void add_all_locations()
 	}	
 }
 
-void add_new_web(char* name,char* filename,char* url_addition,char* description,Sint64 version,pLocation loc,char* image_url)
+void add_new_web(char* name,char* filename,char* url_addition,char* description,char* long_description,Sint64 version,pLocation loc,char* image_url)
 {
-	pSourceList source = add_file_to_opkList(name,filename,loc,version,description[0]?description:NULL);
+	pSourceList source = add_file_to_opkList(name,filename,loc,version,description[0]?description:NULL,long_description[0]?long_description:NULL);
 	if (url_addition[0])
 	{
 		if (source->url_addition)
@@ -584,13 +599,14 @@ void add_new_web(char* name,char* filename,char* url_addition,char* description,
 	}
 	printf("Added: %s, Version %s       %s%s%s\n       %s\n       %s\n",name,ctime((time_t*)&(version)),loc->url,url_addition,filename,description,image_url);
 	description[0] = 0;
+	long_description[0] = 0;
 	url_addition[0] = 0;
 	image_url[0] = 0;
 }
 
 void update_repositories()
 {
-	char buffer[1024];
+	char buffer[65536];
 	download_new_repositories();
 	pLocation location = locationList;
 	while (location)
@@ -616,9 +632,10 @@ void update_repositories()
 		char filename[256] = "";
 		char url_addition[256] = "";
 		char description[1024] = "";
+		char long_description[65536] = "";
 		char image_url[1024] = "";
 		Sint64 version = 0;
-		while (fgets(buffer, 1024, fp) != NULL)
+		while (fgets(buffer, 65536, fp) != NULL)
 		{
 			if (buffer[0] == '\n') //line break, skip
 				continue;
@@ -628,7 +645,7 @@ void update_repositories()
 			if (buffer[0] == '[') //new entry
 			{
 				if (name[0]) //Adding old entry
-					add_new_web(name,filename,url_addition,description,version,location,image_url);
+					add_new_web(name,filename,url_addition,description,long_description,version,location,image_url);
 				char* end_character = strchr(buffer,']');
 				if (end_character)
 					end_character[0] = 0;
@@ -645,13 +662,31 @@ void update_repositories()
 				middle_character++;
 				while (middle_character[0] == ' ')
 					middle_character++;
-				char value[256];
+				char value[65536];
 				sprintf(value,"%s",middle_character);
 				if (strcmp(key,"version") == 0)
 					version = atoi(value);
 				else
 				if (strcmp(key,"description") == 0)
 					sprintf(description,"%s",value);
+				else
+				if (strcmp(key,"long_description") == 0)
+				{
+					int i;
+					int j = 0;
+					for (i = 0; value[i]!=0; i++)
+					{
+						if (value[i] == '\\' && value[i+1] == 'n')
+						{
+							j++;
+							i++;
+							long_description[i-j] = '\n';
+						}
+						else
+							long_description[i-j] = value[i];
+					}
+					long_description[i-j] = 0;
+				}
 				else
 				if (strcmp(key,"url_addition") == 0)
 					sprintf(url_addition,"%s",value);
@@ -664,7 +699,7 @@ void update_repositories()
 			}
 		}
 		if (name[0]) //Adding last entry
-			add_new_web(name,filename,url_addition,description,version,location,image_url);
+			add_new_web(name,filename,url_addition,description,long_description,version,location,image_url);
 		pclose(fp);		
 		location = location->next;
 	}

@@ -19,9 +19,82 @@
 #define RIGHT_TEXT screen->w*10/32
 
 SDL_Surface* show_image = NULL;
+spTextBlockPointer show_block = NULL;
+
+Sint32 help_pos = 0;
+
+void draw_help(spTextBlockPointer block)
+{
+	char buffer[256];
+	spInterpolateTargetToColor(0,SP_ONE/2);
+	spRectangle(screen->w/2,screen->h/2,0,screen->w*5/6,screen->h*5/6,LIST_BACKGROUND_COLOR);
+	spRectangleBorder(screen->w/2,screen->h/2,0,screen->w*5/6+2,screen->h*5/6+2,1,1,FONT_COLOR);
+	spFontDrawTextBlock(left,screen->w/8,screen->h/8,0,block,screen->h*3/4,help_pos,font);
+	spFontDrawMiddle(screen->w/2,screen->h*11/12-font->maxheight,0,"[o] or [c] Back",font_small);
+	int max_lines = screen->h*3/4/font->maxheight;
+	if (help_pos != SP_ONE && block->line_count > max_lines)
+	{
+		spTriangle(screen->w*11/12 - 1,screen->h*11/12 -11,0,
+		           screen->w*11/12 -11,screen->h*11/12 -11,0,
+		           screen->w*11/12 - 6,screen->h*11/12 - 6,0,FONT_COLOR);
+	}
+	if (help_pos != 0 && block->line_count > max_lines)
+	{
+		spTriangle(screen->w*11/12 - 6,screen->h/12+ 6,0,
+		           screen->w*11/12 -11,screen->h/12+11,0,
+		           screen->w*11/12 - 1,screen->h/12+11,0,FONT_COLOR);
+	}
+}
+
+int calc_help(spTextBlockPointer block,int steps)
+{
+	int max_lines = screen->h*3/4/font->maxheight;
+	if (time_until_next > 0)
+		time_until_next -= steps;
+	if (spGetInput()->axis[1] < 0 && help_pos > 0 &&  block->line_count > max_lines)
+	{
+		if (time_until_next <= 0)
+		{
+			help_pos-=SP_ONE/(block->line_count-max_lines);
+			if (help_pos < 0)
+				help_pos = 0;
+			next_in_a_row++;
+			time_until_next = 300/next_in_a_row;
+		}
+	}
+	else
+	if (spGetInput()->axis[1] > 0 && help_pos < SP_ONE &&  block->line_count > max_lines)
+	{
+		if (time_until_next <= 0)
+		{
+			help_pos+=SP_ONE/(block->line_count-max_lines);
+			if (help_pos > SP_ONE)
+				help_pos = SP_ONE;
+			next_in_a_row++;
+			time_until_next = 300/next_in_a_row;
+		}
+	}
+	else
+	{
+		time_until_next = 0;
+		next_in_a_row = 0;
+	}
+	if (spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] || spGetInput()->button[SP_PRACTICE_OK_NOWASD])
+	{
+		spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] = 0;
+		spGetInput()->button[SP_PRACTICE_OK_NOWASD] = 0;
+		return 0;
+	}
+	return 1;
+}
 
 void draw_details(pOpkList sel)
 {
+	if (show_block)
+	{
+		draw_help(show_block);
+		return;
+	}
 	if (show_image)
 	{
 		spClearTarget(0);
@@ -42,6 +115,7 @@ void draw_details(pOpkList sel)
 	spFontDrawRight(LEFT_TEXT,y,0,"Version:",font);
 	pSourceList source = sel->sources;
 	spTextBlockPointer block = NULL;
+	spTextBlockPointer long_block = NULL;
 	char* image_url = NULL;
 	while (source)
 	{
@@ -78,6 +152,8 @@ void draw_details(pOpkList sel)
 		y+=distance;
 		if (source->block)
 			block = source->block;
+		if (source->long_block)
+			long_block = source->long_block;
 		if (source->image_url)
 			image_url = source->image_url;
 		source = source->next;
@@ -89,13 +165,19 @@ void draw_details(pOpkList sel)
 	}
 	y+=distance;
 
+	if (image_url && long_block)
+		spFontDrawMiddle(screen->w/2,screen->h*13/16,0,"[a] Show description [o] Show screenshot [c] Back",font);
+	else
 	if (image_url)
-		spFontDrawMiddle(screen->w/2,screen->h*13/16,0,"[o] Show screenshot     [c] Back",font);
+		spFontDrawMiddle(screen->w/2,screen->h*13/16,0,"[o] Show screenshot [c] Back",font);
+	else
+	if (long_block)
+		spFontDrawMiddle(screen->w/2,screen->h*13/16,0,"[a] Show description [c] Back",font);
 	else
 		spFontDrawMiddle(screen->w/2,screen->h*13/16,0,"[o] or [c] Back",font);
 }
 
-int calc_details(pOpkList sel)
+int calc_details(pOpkList sel,int steps)
 {
 	if (show_image)
 	{
@@ -108,13 +190,28 @@ int calc_details(pOpkList sel)
 		}
 		return 1;
 	}
+	if (show_block)
+	{
+		if (calc_help(show_block,steps) == 0)
+			show_block = NULL;
+		else
+			return 1;
+	}
 	pSourceList source = sel->sources;
 	char* image_url = NULL;
+	spTextBlockPointer long_block = NULL;
 	while (source)
 	{
 		if (source->image_url)
 			image_url = source->image_url;
+		if (source->long_block)
+			long_block = source->long_block;
 		source = source->next;
+	}
+	if (long_block && spGetInput()->button[SP_BUTTON_X])
+	{
+		help_pos = 0;
+		show_block = long_block;
 	}
 	if (image_url && spGetInput()->button[SP_PRACTICE_OK_NOWASD])
 	{
@@ -132,7 +229,7 @@ int calc_details(pOpkList sel)
 		sprintf(buffer,"rm %s",random_filename);
 		system(buffer);
 	}
-	if (spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] || (image_url == NULL && spGetInput()->button[SP_PRACTICE_OK_NOWASD]))
+	if (spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] || (image_url == NULL && spGetInput()->button[SP_PRACTICE_OK_NOWASD]) || (show_block == NULL && spGetInput()->button[SP_PRACTICE_OK_NOWASD]))
 	{
 		spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] = 0;
 		spGetInput()->button[SP_PRACTICE_OK_NOWASD] = 0;
@@ -141,67 +238,3 @@ int calc_details(pOpkList sel)
 	return 1;
 }
 
-Sint32 help_pos = 0;
-
-void draw_help()
-{
-	char buffer[256];
-	spInterpolateTargetToColor(0,SP_ONE/2);
-	spRectangle(screen->w/2,screen->h/2,0,screen->w*5/6,screen->h*5/6,LIST_BACKGROUND_COLOR);
-	spRectangleBorder(screen->w/2,screen->h/2,0,screen->w*5/6+2,screen->h*5/6+2,1,1,FONT_COLOR);
-	spFontDrawTextBlock(left,screen->w/8,screen->h/8,0,helpBlock,screen->h*3/4,help_pos,font);
-	spFontDrawMiddle(screen->w/2,screen->h*11/12-font->maxheight,0,"[o] or [c] Back",font_small);
-	if (help_pos != SP_ONE)
-	{
-		spTriangle(screen->w*11/12 - 1,screen->h*11/12 -11,0,
-		           screen->w*11/12 -11,screen->h*11/12 -11,0,
-		           screen->w*11/12 - 6,screen->h*11/12 - 6,0,FONT_COLOR);
-	}
-	if (help_pos != 0)
-	{
-		spTriangle(screen->w*11/12 - 6,screen->h/12+ 6,0,
-		           screen->w*11/12 -11,screen->h/12+11,0,
-		           screen->w*11/12 - 1,screen->h/12+11,0,FONT_COLOR);
-	}
-}
-
-int calc_help(int steps)
-{
-	if (time_until_next > 0)
-		time_until_next -= steps;
-	if (spGetInput()->axis[1] < 0 && help_pos > 0)
-	{
-		if (time_until_next <= 0)
-		{
-			help_pos-=SP_ONE/(helpBlock->line_count-12);
-			if (help_pos < 0)
-				help_pos = 0;
-			next_in_a_row++;
-			time_until_next = 300/next_in_a_row;
-		}
-	}
-	else
-	if (spGetInput()->axis[1] > 0 && help_pos < SP_ONE)
-	{
-		if (time_until_next <= 0)
-		{
-			help_pos+=SP_ONE/(helpBlock->line_count-12);
-			if (help_pos > SP_ONE)
-				help_pos = SP_ONE;
-			next_in_a_row++;
-			time_until_next = 300/next_in_a_row;
-		}
-	}
-	else
-	{
-		time_until_next = 0;
-		next_in_a_row = 0;
-	}
-	if (spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] || spGetInput()->button[SP_PRACTICE_OK_NOWASD])
-	{
-		spGetInput()->button[SP_PRACTICE_CANCEL_NOWASD] = 0;
-		spGetInput()->button[SP_PRACTICE_OK_NOWASD] = 0;
-		return 0;
-	}
-	return 1;
-}
