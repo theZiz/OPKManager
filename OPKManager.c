@@ -63,7 +63,7 @@ char help[MAX_HELP];
 spTextBlockPointer helpBlock = NULL;
 spFontPointer font = NULL;
 spFontPointer font_small = NULL;
-#define ONE_HOUR (60*60)
+#define ONE_HOUR (0)
 
 typedef struct sRepository *pRepository;
 typedef struct sRepository {

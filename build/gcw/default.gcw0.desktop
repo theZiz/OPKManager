@@ -7,5 +7,5 @@ Type=Application
 StartupNotify=true
 Icon=OPKManager
 Categories=settings;
-X-OD-Manual=README.md
+X-OD-Manual=OPKManager/README.md
 
