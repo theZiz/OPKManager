@@ -41,6 +41,8 @@ void load_repository_list()
 	FILE *fp = fopen(get_path(buffer,"repositories.txt"), "r");
 	while (fgets(buffer, 1024, fp) != NULL)
 	{
+		if (buffer[0] == '#')
+			continue;
 		pRepository repository = (pRepository)malloc(sizeof(tRepository));
 		sprintf(repository->url,"%s",buffer);
 		repository->next = repositoryList;
@@ -55,6 +57,8 @@ void load_alias_list()
 	FILE *fp = fopen(get_path(buffer,"alias.txt"), "r");
 	while (fgets(buffer, 1024, fp) != NULL)
 	{
+		if (buffer[0] == '#')
+			continue;
 		pRepository alias = (pRepository)malloc(sizeof(tRepository));
 		sprintf(alias->url,"%s",buffer);
 		alias->next = aliasRepositoryList;
