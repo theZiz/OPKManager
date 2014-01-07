@@ -1,7 +1,7 @@
 #!/bin/sh
 # Change the folder to YOUR sparrow3d folder!
 PROGRAM="OPKManager"
-VERSION="0.9.11.0"
+VERSION="1.0.0.0"
 DEST=./build/gcw
 echo "<html>" > index.htm
 echo "<head>" >> index.htm
@@ -19,7 +19,6 @@ do
 		cp -r font "$f/$PROGRAM"
 		cp -r data "$f/$PROGRAM"
 		cp README.md "$f/$PROGRAM"
-		cp opkrun "$f/$PROGRAM"
 		cd $f
 		echo "--> Create archive"
 		if [ $NAME = "pandora" ]; then
@@ -48,7 +47,6 @@ do
 		rm -r $PROGRAM/font
 		rm -r $PROGRAM/data
 		rm $PROGRAM/README.md
-		rm $PROGRAM/opkrun
 		cd ..
 		cd ..
 	fi

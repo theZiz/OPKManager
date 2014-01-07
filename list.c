@@ -296,10 +296,7 @@ void read_locations()
 	{
 		pLocation loc = (pLocation)malloc(sizeof(tLocation));
 		if (strcmp(directory->name,ROOT"/data") == 0)
-		{
-			sprintf(loc->name,"Internal");
 			loc->kind = 0;
-		}
 		else
 		{
 			//Looking, whether this is an SD Card or not.
@@ -352,16 +349,13 @@ void read_locations()
 			}
 			if (yes)
 #endif
-			{
-				sprintf(loc->name,"SD Card");
 				loc->kind = 1;
-			}
 			else
-			{
-				sprintf(loc->name,"USB Device");
 				loc->kind = 3;
-			}
 		}
+		char* ending = directory->name;
+		ending+=strlen(ROOT)+1;
+		sprintf(loc->name,"%s",	&ending[0]);
 		loc->url = (char*)malloc(strlen(directory->name)+7);
 		sprintf(loc->url,"%s/apps/",directory->name);
 		loc->update_call = NULL;
