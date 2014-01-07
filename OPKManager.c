@@ -148,6 +148,9 @@ void info(char* buffer,int dimm)
 	spFlip();
 }
 
+void init_OPKManager(int all);
+void quit_OPKManager(int all);
+
 #include "list.c"
 #include "details.c"
 #include "selection.c"
@@ -379,8 +382,8 @@ void draw( void )
 			draw_selection(buffer,sel,0,from_sel,0);
 			break;
 		case 3:
-			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
-			sprintf(buffer2,"%s%s ?",to_sel->url,to_sel_source->fileName);
+			sprintf(buffer,"%s%s ?",from_sel->url,from_sel_source->fileName);
+			sprintf(buffer2,"%s%s",to_sel->url,to_sel_source->fileName);
 			draw_sure("Are you sure you want to overwrite",buffer2,"with",buffer,0);
 			break;
 	}
@@ -395,8 +398,8 @@ void draw( void )
 			draw_selection(buffer,sel,0,from_sel,0);
 			break;
 		case 3:
-			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
-			sprintf(buffer2,"%s%s ?",to_sel->url,to_sel_source->fileName);
+			sprintf(buffer,"%s%s ?",from_sel->url,from_sel_source->fileName);
+			sprintf(buffer2,"%s%s",to_sel->url,to_sel_source->fileName);
 			draw_sure("Are you sure you want to overwrite",buffer2,"with",buffer,0);
 			break;
 	}
@@ -407,7 +410,7 @@ void draw( void )
 			draw_selection(buffer,sel,1,NULL,0);
 			break;
 		case 3:
-			sprintf(buffer,"%s%s",from_sel->url,from_sel_source->fileName);
+			sprintf(buffer,"%s%s?",from_sel->url,from_sel_source->fileName);
 			draw_sure("Are you sure you want to delete",buffer,"","",0);
 			break;
 	}
@@ -426,6 +429,12 @@ void draw( void )
 			break;
 		case 3:
 			draw_sure("","You can't copy",PROGRAM_NAME,"",1);
+			break;
+		case 4:
+			draw_sure("Couldn't start",sel->longName,"Maybe try to update","to the recent firmware version.",1);
+			break;
+		case 5:
+			draw_sure("","Couldn't start",sel->longName,"",1);
 			break;
 	}
 	spFlip();
@@ -1179,9 +1188,8 @@ void resize(Uint16 w,Uint16 h)
 
 }
 
-int main(int argc, char **argv)
+void init_OPKManager(int all)
 {
-	srand(time(NULL));
 	spInitCore();
 	spSetAffineTextureHack(0); //We don't need it :)
 	spInitMath();
@@ -1194,52 +1202,107 @@ int main(int argc, char **argv)
 	update_surface = spLoadSurface("./data/update.png");
 	spSetZSet(0);
 	spSetZTest(0);
-	info("Searching local packages...",0);
-	read_locations();
-	add_all_locations();
-	//Reading scripts download list
-	char buffer[256];
-	spCreateDirectoryChain(get_path(buffer,"scripts"));
-	if (spFileExists(get_path(buffer,"repositories.txt")) == 0)
+	if (all)
 	{
-		FILE *fp = fopen(get_path(buffer,"repositories.txt"), "w");
-		fprintf(fp,"http://ziz.gp2x.de/gcw-repos/ziz.py\n");
-		fprintf(fp,"http://ziz.gp2x.de/gcw-repos/official.py\n");
-		fclose(fp);
+		info("Searching local packages...",0);
+		read_locations();
+		add_all_locations();
+		//Reading scripts download list
+		char buffer[256];
+		spCreateDirectoryChain(get_path(buffer,"scripts"));
+		if (spFileExists(get_path(buffer,"repositories.txt")) == 0)
+		{
+			FILE *fp = fopen(get_path(buffer,"repositories.txt"), "w");
+			fprintf(fp,"http://ziz.gp2x.de/gcw-repos/ziz.py\n");
+			fprintf(fp,"http://ziz.gp2x.de/gcw-repos/official.py\n");
+			fclose(fp);
+		}
+		load_repository_list();
+		
+		spCreateDirectoryChain(get_path(buffer,"alias"));
+		if (spFileExists(get_path(buffer,"alias.txt")) == 0)
+		{
+			FILE *fp = fopen(get_path(buffer,"alias.txt"), "w");
+			fprintf(fp,"http://ziz.gp2x.de/gcw-repos/predefined.txt\n");
+			fclose(fp);
+		}
+		load_alias_list();
+		update_alias();
+		
+		//Reading help
+		SDL_RWops *file=SDL_RWFromFile("./README.md","r");
+		if (file)
+		{
+			int count = SDL_RWread(file,help,1,MAX_HELP-1);
+			SDL_RWclose(file);
+			help[count-1] = 0;
+			helpBlock = spCreateTextBlock(help,screen->w*9/12,font);
+		}
 	}
-	load_repository_list();
-	
-	spCreateDirectoryChain(get_path(buffer,"alias"));
-	if (spFileExists(get_path(buffer,"alias.txt")) == 0)
-	{
-		FILE *fp = fopen(get_path(buffer,"alias.txt"), "w");
-		fprintf(fp,"http://ziz.gp2x.de/gcw-repos/predefined.txt\n");
-		fclose(fp);
-	}
-	load_alias_list();
-	update_alias();
-	
-	//Reading help
-	SDL_RWops *file=SDL_RWFromFile("./README.md","r");
-	if (file)
-	{
-		int count = SDL_RWread(file,help,1,MAX_HELP-1);
-		SDL_RWclose(file);
-		help[count-1] = 0;
-		helpBlock = spCreateTextBlock(help,screen->w*9/12,font);
-	}
-	
+}
 
-	spLoop( draw, calc, 10, resize, NULL );
+void quit_OPKManager(int all)
+{
+	if (all)
+	{
+		while (opkList)
+		{
+			while (opkList->sources)
+			{
+				free(opkList->sources->download_fileName);
+				free(opkList->sources->fileName);
+				free(opkList->sources->description);
+				if (opkList->sources->block)
+					spDeleteTextBlock(opkList->sources->block);
+				free(opkList->sources->url_addition);
+				free(opkList->sources->image_url);
+				free(opkList->sources->long_description);
+				pSourceList next = opkList->sources->next;
+				free (opkList->sources);
+				opkList->sources = next;
+			}
+			pOpkList next = opkList->next;
+			free(opkList);
+			opkList = next;
+		}
+		while (locationList)
+		{
+			free(locationList->url);
+			free(locationList->update_call);
+			pLocation next = locationList->next;
+			free(locationList);
+			locationList = next;
+		}
+		opk_count = 0;
+		selected = 0;
+	}
 	spFontDelete(font);
+	font = NULL;
 	spFontDelete(font_small);
+	font_small = NULL;
 	spDeleteSurface(sdcard_surface);
+	sdcard_surface = NULL;
 	spDeleteSurface(internal_surface);
+	internal_surface = NULL;
 	spDeleteSurface(web_surface);
+	web_surface = NULL;
 	spDeleteSurface(usb_surface);
+	usb_surface = NULL;
 	spDeleteSurface(update_surface);
+	update_surface = NULL;
 	if (helpBlock)
+	{
 		spDeleteTextBlock(helpBlock);
+		helpBlock = NULL;
+	}
 	spQuitCore();
+}
+
+int main(int argc, char **argv)
+{
+	srand(time(NULL));
+	init_OPKManager(1);
+	spLoop( draw, calc, 10, resize, NULL );
+	quit_OPKManager(1);
 	return 0;
 }

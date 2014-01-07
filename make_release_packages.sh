@@ -19,6 +19,7 @@ do
 		cp -r font "$f/$PROGRAM"
 		cp -r data "$f/$PROGRAM"
 		cp README.md "$f/$PROGRAM"
+		cp opkrun "$f/$PROGRAM"
 		cd $f
 		echo "--> Create archive"
 		if [ $NAME = "pandora" ]; then
@@ -47,6 +48,7 @@ do
 		rm -r $PROGRAM/font
 		rm -r $PROGRAM/data
 		rm $PROGRAM/README.md
+		rm $PROGRAM/opkrun
 		cd ..
 		cd ..
 	fi

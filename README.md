@@ -30,6 +30,6 @@ If a line starts with # it will be ignored.
 Closing words
 =============
 
-To run the selected program press [S]. To exit the OPKManager press [E].
+To run the selected program press [S]. Some programs use the file selector of the gcw menu application gmenu2x. These program may be fail because of missing arguments. To exit the OPKManager press [E].
 
 This program was developed by Ziz. It comes with no warranty of anything. ;) It is licensed under the GPL2+. If you sell this program, Richard Stallman will come to you at night...

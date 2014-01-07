@@ -289,6 +289,30 @@ void system_run(pOpkList sel,pSourceList from_source)
 	char buffer[2048];
 	sprintf(buffer,"Running %s from %s...",sel->longName,from_source->location->name);
 	info(buffer,1);
-	sprintf(buffer,"opkrun %s%s",from_source->location->url,from_source->fileName);
-	system(buffer);
+	
+	sprintf(buffer,"%s%s",from_source->location->url,from_source->fileName);
+	struct OPK* opkFile = opk_open(buffer);
+	if (opkFile == NULL)
+	{
+		show_error = 5;
+		return;
+	}
+	const char* metaname;
+	opk_open_metadata(opkFile, &metaname);
+	char metametaname[1024];
+	sprintf(metametaname,"%s",metaname);
+	opk_close(opkFile);
+	quit_OPKManager(0);
+	sprintf(buffer,"./opkrun %s %s%s",metametaname,from_source->location->url,from_source->fileName);
+	if (system(buffer) == 0)
+	{}
+	else
+	{
+		sprintf(buffer,"opkrun %s %s%s",metametaname,from_source->location->url,from_source->fileName);
+		if (system(buffer) == 0)
+		{}
+		else
+			show_error = 4;
+	}
+	init_OPKManager(0);
 }
