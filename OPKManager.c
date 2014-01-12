@@ -38,7 +38,7 @@
 #else
 	#define ROOT "./test"
 #endif
-#define VERSION "1.0.0.0"
+#define VERSION "1.0.0.2"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
 #define FONT_SIZE 11
 #define FONT_SIZE_SMALL 9
@@ -436,6 +436,9 @@ void draw( void )
 		case 5:
 			draw_sure("","Couldn't start",sel->longName,"",1);
 			break;
+		case 6:
+			draw_sure("You can't copy from",from_sel->name,"because no destination","(e.g. a sdcard) is available",1);
+			break;
 	}
 	spFlip();
 }
@@ -533,6 +536,13 @@ int calc(Uint32 steps)
 		show_help = calc_help(helpBlock,steps);
 		return 0;
 	}
+	//ERROR
+	if (show_error)
+	{
+		if (calc_sure() != 1)
+			show_error = 0;
+		return 0;
+	}
 	int result;
 	//COPYING
 	switch (show_copy)
@@ -606,6 +616,11 @@ int calc(Uint32 steps)
 						system_copy_new(sel,from_sel_source,to_sel);
 						show_copy = 0;
 					}
+				}
+				if (location_count == 0)
+				{
+					show_error = 6;
+					show_copy = 0;
 				}
 				else
 					show_copy = 2;
@@ -879,13 +894,6 @@ int calc(Uint32 steps)
 			if (result == 0)
 				show_run = 0;
 			return 0;
-	}
-	//ERROR
-	if (show_error)
-	{
-		if (calc_sure() != 1)
-			show_error = 0;
-		return 0;
 	}
 	if (spGetInput()->button[SP_BUTTON_L_NOWASD])
 	{

@@ -221,12 +221,28 @@ void remove_all_alias()
 	}
 }
 
+void add_own_alias(spFileListPointer *directory)
+{
+	char buffer[256];
+	if (spFileExists(get_path(buffer,"automatic_alias.txt")) == 0)
+		return;
+	spFileListPointer own = (spFileListPointer)malloc(sizeof(spFileList));
+	own->next = *directory;
+	if (*directory)
+		(*directory)->prev = own;
+	own->prev = NULL;
+	sprintf(own->name,"%s",get_path(buffer,"automatic_alias.txt"));
+	own->type = SP_FILE_FILE;
+	*directory = own;
+}
+
 void update_alias()
 {
 	remove_all_alias();
 	spFileListPointer directoryList = NULL;
 	char buffer[1024];
 	spFileGetDirectory(&directoryList,get_path(buffer,"alias"),0,1);
+	add_own_alias(&directoryList);
 	spFileListPointer directory = directoryList;
 	while (directory)
 	{

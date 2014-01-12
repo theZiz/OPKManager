@@ -39,6 +39,44 @@ void update_biggest_size(pOpkList file)
 	}
 }
 
+void check_name(pOpkList opk,pSourceList opk_source)
+{
+	//Getting the name from the opk:
+	char buffer[512];
+	sprintf(buffer,"%s%s",opk_source->location->url,opk_source->fileName);
+	struct OPK* opkFile = opk_open(buffer);
+	if (opkFile == NULL)
+	{
+		printf("That shouldn't happen\n");
+		return;
+	}
+	const char* metaname;
+	opk_open_metadata(opkFile, &metaname);
+	const char *key, *val;
+	size_t skey, sval;
+	while(opk_read_pair(opkFile, &key, &skey, &val, &sval) && key)
+	{
+		char key_string[256];
+		sprintf(key_string,"%.*s",(int)skey,key);
+		if (strcmp(key_string,"Name") == 0)
+		{
+			memcpy(buffer,val,sval);
+			buffer[sval] = 0;
+		}
+	}
+	opk_close(opkFile);
+	if (strcmp(buffer,opk->longName))
+	{
+		printf("Repo and opk name differ, adding a new line to automatic_alias.txt\n");
+		char buffer2[512];
+		FILE *fp = fopen(get_path(buffer2,"automatic_alias.txt"), "w");
+		fprintf(fp,"[%s]\n",opk->longName);
+		fprintf(fp,"%s\n",buffer);
+		fprintf(fp,"\n");
+		fclose(fp);		
+	}
+}
+
 void system_copy_overwrite(pOpkList opkFile,pSourceList from_source,pSourceList to_source)
 {
 	if (from_source->location->kind != 2)
@@ -169,7 +207,8 @@ void system_copy_new(pOpkList opkFile,pSourceList from_source,pLocation new_loca
 		sprintf(buffer,"touch -r %s%s %s%s",from_source->location->url,from_source->fileName,new_location->url,from_source->fileName);
 		system(buffer);
 	}
-	add_new_source(opkFile,new_location,from_source->fileName,from_source->version,from_source->description,from_source->long_description);
+	pSourceList to_source = add_new_source(opkFile,new_location,from_source->fileName,from_source->version,from_source->description,from_source->long_description);
+	check_name(opkFile,to_source);
 }
 
 void system_move_overwrite(pOpkList sel,pSourceList from_source,pSourceList to_source)

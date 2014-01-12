@@ -25,7 +25,7 @@ Aliases
 =======
 
 Some programs have different names in the opk file than in the repository. With this two entries would be shown, e.g. one for Unnamend Monkey Game and one for UMG. So I use alias files to define, which names describe the same program. These alias files are stored in /usr/local/home/.config/OPKManager/alias. Furthermore all urls in /usr/local/home/.config/OPKManager/alias.txt are downloaded at update time to have update to date aliases, especially if new programs are added to the repository.
-If a line starts with # it will be ignored.
+If a line starts with # it will be ignored. If you download a program, which hasn't an alias yet and where the repository name and the name in the opk differ, a new entry will be added to /usr/local/home/.config/OPKManager/automatic_alias.txt, which you can edit on your own of course, too.
 
 Closing words
 =============
