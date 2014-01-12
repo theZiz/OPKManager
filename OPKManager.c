@@ -1010,6 +1010,7 @@ int calc(Uint32 steps)
 				show_copy = 0;
 			}
 			else
+			if (location_count!=0)
 				show_copy = 2;
 			return 0;
 		}
