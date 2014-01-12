@@ -7,7 +7,7 @@ FILES="./target-files/gcw.mk"
 echo "Compiling for all targets..."
 for f in $FILES
 do
-	cd ../Sparrow-C4A-Manager
+	cd ../OPKManager
 	TARGET=`echo "$f" | cut -d/ -f3 | cut -d. -f1`
 	make clean > /dev/null
 	make TARGET=$TARGET > /dev/null
