@@ -140,7 +140,6 @@ void system_copy_overwrite(pOpkList opkFile,pSourceList from_source,pSourceList 
 		system(buffer);
 	}
 	to_source->version = from_source->version;
-	to_source->size = from_source->size;
 	update_newest_version(opkFile);
 	update_biggest_size(opkFile);
 }
@@ -302,6 +301,8 @@ void system_delete(pOpkList opkFile,pSourceList from_source)
 		if (opkFile->next == NULL) //was last
 			selected--;
 		//same for sorting list
+		opk = sortedOpkList;
+		before = NULL;
 		while (opk)
 		{
 			if (opk == opkFile)
