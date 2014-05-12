@@ -13,6 +13,9 @@ Dink Smallw.
 [DosBox]
 DOSBox 0.74
 
+[eduke32]
+EDuke32
+
 [Fceux]
 Fceux 2.2.2
 

@@ -21,7 +21,7 @@ class UpdateAction(argparse.Action):
 		if len(output) > 1:
 			print "[Puzzletube]" #Starts a new entry
 			for line in output:
-				if line.startswith("<a href=puzzletube-gcw"):
+				if line.startswith("<a href=puzzletube.opk"):
 					#searching the filename itself
 					parts = line.split('<a href=')
 					parts = parts[1].split(' ')
@@ -29,17 +29,18 @@ class UpdateAction(argparse.Action):
 				if line.startswith("Updated at the "):
 					#Parsing the time
 					parts = line.split('Updated at the ')
-					t = time.strptime(parts[1],"%d.%m.%Y %H:%M:%S .")
+					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
 			print "description: A puzzle game. On a tube!"#Description. Not needed.
 			print "url_addition: puzzletube/"#Url addition. Not needed.
+			print "image_url: http://ziz.gp2x.de/screenshots/puzzletube.png"
 			print "" #line breaks make the like beatiful
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/Sparrow-C4A-Manager/index.htm',stdout=subprocess.PIPE,shell=True)
 		if len(output) > 1:
 			print "[Sparrow C4A Manager]"
 			output = process.stdout.read().split('\n')
 			for line in output:
-				if line.startswith("<a href=Sparrow-C4A-Manager-gcw"):
+				if line.startswith("<a href=Sparrow-C4A-Manager.opk"):
 					#searching the filename itself
 					parts = line.split('<a href=')
 					parts = parts[1].split(' ')
@@ -47,10 +48,11 @@ class UpdateAction(argparse.Action):
 				if line.startswith("Updated at the "):
 					#Parsing the time
 					parts = line.split('Updated at the ')
-					t = time.strptime(parts[1],"%d.%m.%Y %H:%M:%S .")
+					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
 			print "description: An alternative manager for Compo4All"
 			print "url_addition: Sparrow-C4A-Manager/"
+			print "image_url: http://ziz.gp2x.de/screenshots/Sparrow-C4A-Manager.png"
 			print ""
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/OPKManager/index.htm',stdout=subprocess.PIPE,shell=True)
 		if len(output) > 1:
@@ -70,8 +72,47 @@ class UpdateAction(argparse.Action):
 			print "description: A manager for all your opk files"
 			print "long_description: OPK Manager is a manager for OPK files. You can:\\n* Copy opk files\\n* Move opk files\\n* Delete opk files\\n* Install new opk files via internet\\n* See descriptions\\n* See the installation date\\n* See screenshots"
 			print "url_addition: OPKManager/"
+			print "image_url: http://ziz.gp2x.de/screenshots/OPKManager.png"
 			print ""
-
+		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/glutexto/index.htm',stdout=subprocess.PIPE,shell=True)
+		if len(output) > 1:
+			print "[glutexto]"
+			output = process.stdout.read().split('\n')
+			for line in output:
+				if line.startswith("<a href=glutexto.opk"):
+					#searching the filename itself
+					parts = line.split('<a href=')
+					parts = parts[1].split(' ')
+					print "filename: " + parts[0] #NEEDED!
+				if line.startswith("Updated at the "):
+					#Parsing the time
+					parts = line.split('Updated at the ')
+					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
+					print "version: " + str(calendar.timegm(t)) #NEEDED!
+			print "description: A simple text editor"
+			print "long_description: A text editor for the gcw. Use it for small changes of text configs or viweing large log files."
+			print "url_addition: glutexto/"
+			print "image_url: http://ziz.gp2x.de/screenshots/glutexto.png"
+			print ""
+		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/snowman/index.htm',stdout=subprocess.PIPE,shell=True)
+		if len(output) > 1:
+			print "[Snowman]"
+			output = process.stdout.read().split('\n')
+			for line in output:
+				if line.startswith("<a href=snowman.opk"):
+					#searching the filename itself
+					parts = line.split('<a href=')
+					parts = parts[1].split(' ')
+					print "filename: " + parts[0] #NEEDED!
+				if line.startswith("Updated at the "):
+					#Parsing the time
+					parts = line.split('Updated at the ')
+					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
+					print "version: " + str(calendar.timegm(t)) #NEEDED!
+			print "description: A jump and run about a snowman"
+			print "url_addition: snowman/"
+			print "image_url: http://ziz.gp2x.de/screenshots/snowman.png"
+			print ""
 def main():
 	parser = argparse.ArgumentParser(description="Ziz's Repository script")
 	parser.add_argument('--register', nargs=0, action=RegisterAction)

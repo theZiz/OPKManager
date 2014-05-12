@@ -4,9 +4,6 @@ cavestory
 [Descent II]
 d2x-rebirth
 
-[EDuke32]
-eduke32
-
 [Fceux]
 fceu320
 
@@ -24,6 +21,9 @@ gpmark
 
 [gpSP]
 gpsp
+
+[G-Sensor]
+gsensor
 
 [Heroes]
 heroes_wip
@@ -51,6 +51,9 @@ prboom
 
 [R. of the Triad]
 rott
+
+[Shadow W.]
+sw_rev2
 
 [Snes9x4d]
 snes9x4d
