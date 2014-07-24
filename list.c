@@ -542,8 +542,12 @@ void merge_fileList_to_opkList(spFileListPointer fileList,pLocation location)
 		char* longname = NULL;
 		char* description = NULL;
 		char* long_description = NULL;
-		const char* metaname;
-		opk_open_metadata(opkFile, &metaname);
+		const char* metaname = NULL;
+		if (opk_open_metadata(opkFile, &metaname) != 1)
+		{
+			file = file->next;
+			continue;
+		}
 		const char *key, *val;
 		size_t skey, sval;
 		while(opk_read_pair(opkFile, &key, &skey, &val, &sval) && key)
