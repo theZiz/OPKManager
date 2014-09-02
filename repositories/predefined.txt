@@ -41,3 +41,6 @@ UMG
 
 [Wireless Connect]
 Wireless
+
+[Hase]
+Hase Prototype

@@ -18,19 +18,39 @@ class RegisterAction(argparse.Action):
 
 class UpdateAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
+		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/gcw-repos/count.php',stdout=subprocess.PIPE,shell=True)
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://www.gcw-zero.com/downloads',stdout=subprocess.PIPE,shell=True)
+		#process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/temp/test.htm',stdout=subprocess.PIPE,shell=True)
 		#process = subprocess.Popen('cat downloads',stdout=subprocess.PIPE,shell=True)
 		output = process.stdout.read().split('<div class="downloads_overview">')
 		for output_part in output:
 			part = output_part.split('\n')
-			program_name_description = part[9]
+			line_number = 0;
+			not_found = 1;
+			while (line_number < len(part)):
+				if (part[line_number].strip().startswith('<span class="downloads_title">')):
+					not_found = 0;
+					break;
+				line_number += 1;
+			if not_found:
+				continue;
+			program_name_description = part[line_number];
 			name = program_name_description.split('>')[1].split('<')[0];
 			if (name == ""):
 				continue
+			line_number = 0;
+			not_found = 1;
+			while (line_number < len(part)):
+				if (part[line_number].strip().startswith('<a class="downloads_link"')):
+					not_found = 0;
+					break;
+				line_number += 1;
+			if not_found:
+				continue;
+			filename = part[line_number].split('href="file.php?file=')[1].split('">')[0];
 			print "["+name+"]"
 			description = program_name_description.split('>')[3];
 			print "description: "+description
-			filename = part[4].split('href="file.php?file=')[1].split('">')[0];
 			print "filename: " + filename
 			l = len(part)
 			found_version = 0

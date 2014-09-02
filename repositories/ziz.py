@@ -113,6 +113,25 @@ class UpdateAction(argparse.Action):
 			print "url_addition: snowman/"
 			print "image_url: http://ziz.gp2x.de/screenshots/snowman.png"
 			print ""
+		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/hase/index.htm',stdout=subprocess.PIPE,shell=True)
+		if len(output) > 1:
+			print "[Hase]"
+			output = process.stdout.read().split('\n')
+			for line in output:
+				if line.startswith("<a href=hase.opk"):
+					#searching the filename itself
+					parts = line.split('<a href=')
+					parts = parts[1].split(' ')
+					print "filename: " + parts[0] #NEEDED!
+				if line.startswith("Updated at the "):
+					#Parsing the time
+					parts = line.split('Updated at the ')
+					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
+					print "version: " + str(calendar.timegm(t)) #NEEDED!
+			print "description: A Prototype about hares in space. Like worms."
+			print "url_addition: hase/"
+			print "image_url: http://ziz.gp2x.de/screenshots/hase320.png"
+			print ""
 def main():
 	parser = argparse.ArgumentParser(description="Ziz's Repository script")
 	parser.add_argument('--register', nargs=0, action=RegisterAction)

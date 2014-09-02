@@ -47,9 +47,9 @@
 #define LIST_BACKGROUND_COLOR spGetRGB(255,255,180)
 #define SELECTED_BACKGROUND_COLOR spGetRGB(185,185,100)
 
-#define WGET "wget --progress=dot --no-check-certificate --timeout=5"
+#define WGET "wget --progress=dot --no-check-certificate --timeout=10"
 #define PROGRESS_MAGIC " 2>&1"
-#define TIMEOUT 5
+#define TIMEOUT 15
 
 SDL_Surface* screen;
 SDL_Surface* listSurface = NULL;
