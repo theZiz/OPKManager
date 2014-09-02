@@ -1,7 +1,7 @@
 #!/bin/sh
 # Change the folder to YOUR sparrow3d folder!
 PROGRAM="OPKManager"
-VERSION="1.0.0.5"
+VERSION="1.0.0.6"
 DEST=./build/gcw
 echo "<html>" > index.htm
 echo "<head>" >> index.htm

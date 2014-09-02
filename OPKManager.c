@@ -38,7 +38,7 @@
 #else
 	#define ROOT "./test"
 #endif
-#define VERSION "1.0.0.5"
+#define VERSION "1.0.0.6"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
 #define FONT_SIZE 11
 #define FONT_SIZE_SMALL 9

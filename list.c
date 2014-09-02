@@ -310,6 +310,11 @@ void read_locations()
 	spFileListPointer directory = directoryList;
 	while (directory)
 	{
+		if (strcmp(directory->name,ROOT"/home") == 0)
+		{
+			directory = directory->next;
+			continue;
+		}
 		pLocation loc = (pLocation)malloc(sizeof(tLocation));
 		if (strcmp(directory->name,ROOT"/data") == 0)
 			loc->kind = 0;
