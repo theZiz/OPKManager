@@ -330,12 +330,12 @@ void system_run(pOpkList sel,pSourceList from_source)
 	sprintf(buffer,"Running %s from %s...",sel->longName,from_source->location->name);
 	info(buffer,1);
 	quit_OPKManager(0);
-	sprintf(buffer,"./opkrun %s%s",from_source->location->url,from_source->fileName);
+	sprintf(buffer,"opkrun %s%s",from_source->location->url,from_source->fileName);
 	if (system(buffer) == 0)
 	{}
 	else
 	{
-		sprintf(buffer,"opkrun %s%s",from_source->location->url,from_source->fileName);
+		sprintf(buffer,"./opkrun %s%s",from_source->location->url,from_source->fileName);
 		if (system(buffer) == 0)
 		{}
 		else

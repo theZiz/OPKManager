@@ -38,14 +38,27 @@
 #else
 	#define ROOT "./test"
 #endif
-#define VERSION "1.0.0.6"
+#define VERSION "1.0.0.7"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
 #define FONT_SIZE 11
 #define FONT_SIZE_SMALL 9
-#define FONT_COLOR spGetRGB(48,48,48)
-#define BACKGROUND_COLOR spGetRGB(225,225,160)
-#define LIST_BACKGROUND_COLOR spGetRGB(255,255,180)
-#define SELECTED_BACKGROUND_COLOR spGetRGB(185,185,100)
+#define FONT_COLOR_R 48
+#define FONT_COLOR_G 48
+#define FONT_COLOR_B 48
+#define BACKGROUND_COLOR_R 225
+#define BACKGROUND_COLOR_G 225
+#define BACKGROUND_COLOR_B 160
+#define LIST_BACKGROUND_COLOR_R 255
+#define LIST_BACKGROUND_COLOR_G 255
+#define LIST_BACKGROUND_COLOR_B 180
+#define SELECTED_BACKGROUND_COLOR_R 185
+#define SELECTED_BACKGROUND_COLOR_G 185
+#define SELECTED_BACKGROUND_COLOR_B 100
+
+Uint16 FONT_COLOR;
+Uint16 BACKGROUND_COLOR;
+Uint16 LIST_BACKGROUND_COLOR;
+Uint16 SELECTED_BACKGROUND_COLOR;
 
 #define WGET "wget --progress=dot --no-check-certificate --timeout=10"
 #define PROGRESS_MAGIC " 2>&1"
@@ -1202,6 +1215,21 @@ void init_OPKManager(int all)
 	spInitCore();
 	spSetAffineTextureHack(0); //We don't need it :)
 	spInitMath();
+	spConfigPointer config = spConfigRead("settings.ini","OPKManager");
+	FONT_COLOR = spGetRGB(spConfigGetInt(config,"font_color_r",FONT_COLOR_R),
+	                      spConfigGetInt(config,"font_color_g",FONT_COLOR_G),
+	                      spConfigGetInt(config,"font_color_b",FONT_COLOR_B));
+	BACKGROUND_COLOR = spGetRGB(spConfigGetInt(config,"background_color_r",BACKGROUND_COLOR_R),
+	                            spConfigGetInt(config,"background_color_g",BACKGROUND_COLOR_G),
+	                            spConfigGetInt(config,"background_color_b",BACKGROUND_COLOR_B));
+	LIST_BACKGROUND_COLOR = spGetRGB(spConfigGetInt(config,"list_background_color_r",LIST_BACKGROUND_COLOR_R),
+	                                 spConfigGetInt(config,"list_background_color_g",LIST_BACKGROUND_COLOR_G),
+	                                 spConfigGetInt(config,"list_background_color_b",LIST_BACKGROUND_COLOR_B));
+	SELECTED_BACKGROUND_COLOR = spGetRGB(spConfigGetInt(config,"selected_background_color_r",SELECTED_BACKGROUND_COLOR_R),
+	                                     spConfigGetInt(config,"selected_background_color_g",SELECTED_BACKGROUND_COLOR_G),
+	                                     spConfigGetInt(config,"selected_background_color_b",SELECTED_BACKGROUND_COLOR_B));	
+	spConfigWrite(config);
+	spConfigFree(config);
 	screen = spCreateDefaultWindow();
 	resize(screen->w,screen->h);
 	sdcard_surface = spLoadSurface("./data/sdcard.png");
