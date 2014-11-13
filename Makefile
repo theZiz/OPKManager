@@ -5,7 +5,7 @@ CFLAGS = -g -fsingle-precision-constant -fPIC
 # Testtweaks: -fgcse-lm -fgcse-sm -fsched-spec-load -fmodulo-sched -funsafe-loop-optimizations -Wunsafe-loop-optimizations -fgcse-las -fgcse-after-reload -fvariable-expansion-in-unroller -ftracer -fbranch-target-load-optimize
 GENERAL_TWEAKS = -ffast-math
 #==PC==
-CPP = gcc -g -march=native -DX86CPU $(GENERAL_TWEAKS)
+FLAGS = -g -DDESKTOP $(GENERAL_TWEAKS)
 SDL = `sdl-config --cflags`
 
 SPARROW_FOLDER = ../sparrow3d
@@ -23,6 +23,8 @@ LIB += -L$(SPARROW_LIB)
 INCLUDE += -I$(SPARROW_FOLDER)
 DYNAMIC += -lsparrow3d -lsparrowNet
 
+CFLAGS += $(PARAMETER) $(FLAGS)
+
 all: OPKManager
 	@echo "=== Built for Target "$(TARGET)" ==="
 
@@ -32,7 +34,7 @@ targets:
 OPKManager: OPKManager.c list.c details.c selection.c systemcalls.c makeBuildDir
 	cp $(SPARROW_LIB)/libsparrow3d.so $(BUILD)
 	cp $(SPARROW_LIB)/libsparrowNet.so $(BUILD)
-	$(CPP) $(CFLAGS) OPKManager.c $(SDL) $(INCLUDE) $(LIB) $(STATIC) $(DYNAMIC) -o $(BUILD)/OPKManager
+	$(CC) $(CFLAGS) OPKManager.c $(SDL) $(INCLUDE) $(LIB) $(STATIC) $(DYNAMIC) -o $(BUILD)/OPKManager
 
 makeBuildDir:
 	 @if [ ! -d $(BUILD:/OPKManager=/) ]; then mkdir $(BUILD:/OPKManager=/);fi
