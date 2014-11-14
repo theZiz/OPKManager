@@ -21,19 +21,21 @@
 
 #define GCW_FEELING
 
-#if defined GCW_FEELING && defined X86CPU
+#if defined GCW_FEELING && defined DESKTOP
 	#define TESTING
 	#define GCW
-	#undef X86CPU
+	#undef DESKTOP
 #endif
+
 #include <sparrow3d.h>
+
 #if defined GCW_FEELING && defined TESTING
-	#define X86CPU
+	#define DESKTOP
 	#undef GCW
 #endif
 #include <opk.h>
 
-#ifndef X86CPU
+#ifndef DESKTOP
 	#define ROOT "/media"
 #else
 	#define ROOT "./test"
