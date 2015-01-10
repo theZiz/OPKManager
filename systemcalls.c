@@ -69,7 +69,7 @@ void check_name(pOpkList opk,pSourceList opk_source)
 	{
 		printf("Repo and opk name differ, adding a new line to automatic_alias.txt\n");
 		char buffer2[512];
-		FILE *fp = fopen(get_path(buffer2,"automatic_alias.txt"), "w");
+		FILE *fp = fopen(get_path(buffer2,"automatic_alias.txt"), "a");
 		fprintf(fp,"[%s]\n",opk->longName);
 		fprintf(fp,"%s\n",buffer);
 		fprintf(fp,"\n");

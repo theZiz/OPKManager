@@ -37,6 +37,9 @@ This program was developed by Ziz. It comes with no warranty of anything. ;) It 
 Changelog
 =========
 
+1.0.0.8:
+* Bugfix in automatic alias (thx to kitlaan)
+
 1.0.0.7:
 * Removed opkrun from opk, because it is preinstalled now
 * Changeable colours
