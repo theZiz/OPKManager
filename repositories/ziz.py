@@ -151,6 +151,25 @@ class UpdateAction(argparse.Action):
 			print "url_addition: sissi/"
 			print "image_url: http://ziz.gp2x.de/screenshots/sissi320.png"
 			print ""
+		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/meteoroid3d/index.htm',stdout=subprocess.PIPE,shell=True)
+		if len(output) > 1:
+			print "[Meteoroid3D]"
+			output = process.stdout.read().split('\n')
+			for line in output:
+				if line.startswith("<a href=meteoroid3d.opk"):
+					#searching the filename itself
+					parts = line.split('<a href=')
+					parts = parts[1].split(' ')
+					print "filename: " + parts[0] #NEEDED!
+				if line.startswith("Updated at the "):
+					#Parsing the time
+					parts = line.split('Updated at the ')
+					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
+					print "version: " + str(calendar.timegm(t)) #NEEDED!
+			print "description: The first REAL 3D game for the GCW"
+			print "url_addition: meteoroid3d/"
+			print "image_url: http://ziz.gp2x.de/screenshots/meteoroid3d_320.png"
+			print ""
 def main():
 	parser = argparse.ArgumentParser(description="Ziz's Repository script")
 	parser.add_argument('--register', nargs=0, action=RegisterAction)
