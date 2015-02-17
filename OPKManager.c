@@ -40,7 +40,7 @@
 #else
 	#define ROOT "./test"
 #endif
-#define VERSION "1.0.0.7"
+#define VERSION "1.0.0.8"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
 #define FONT_SIZE 11
 #define FONT_SIZE_SMALL 9
@@ -331,6 +331,9 @@ void draw( void )
 		case 2:
 			sprintf(buffer,"Sorting by: Size");
 			break;
+		case 3:
+			sprintf(buffer,"Sorting by: Updates avail.");
+			break;
 	}
 	spFontDraw(2,2*font->maxheight-2,0,buffer,font);
 	spFontDraw(2+spFontWidth(buffer,font),2*font->maxheight,0," (Use left and right to change the sorting)",font_small);
@@ -526,8 +529,71 @@ int calc(Uint32 steps)
 				opk->sortedNext = temp;
 				opk = opk->next;
 			}
-			break;	}
-		
+			break;
+		case 3: //update + version
+			sortedOpkList = NULL;
+			opk = opkList;
+			while (opk)
+			{
+				pSourceList source = opk->sources;
+				Sint64 oldest = 0;
+				while (source)
+				{
+					if (source->location->kind != 2 && (source->version < oldest || oldest == 0))
+						oldest = source->version;
+					source = source->next;
+				}
+				source = opk->sources;
+				int update_opk = 0;
+				while (source)
+				{
+					if (oldest!= 0 && oldest+ONE_HOUR < source->version)
+					{
+						update_opk = 1;
+						break;
+					}
+					source = source->next;
+				}
+				//sorted insert
+				temp = sortedOpkList;
+				before = NULL;
+				while (temp)
+				{
+					pSourceList source = temp->sources;
+					Sint64 oldest = 0;
+					while (source)
+					{
+						if (source->location->kind != 2 && (source->version < oldest || oldest == 0))
+							oldest = source->version;
+						source = source->next;
+					}
+					source = temp->sources;
+					int update_temp = 0;
+					while (source)
+					{
+						if (oldest!= 0 && oldest+ONE_HOUR < source->version)
+						{
+							update_temp = 1;
+							break;
+						}
+						source = source->next;
+					}
+					if (update_temp < update_opk)
+						break;
+					if (update_temp == update_opk && temp->newest_version < opk->newest_version)
+						break;
+					before = temp;
+					temp = temp->sortedNext;
+				}
+				if (before)
+					before->sortedNext = opk;
+				else
+					sortedOpkList = opk;
+				opk->sortedNext = temp;
+				opk = opk->next;
+			}
+			break;
+	}
 	
 	
 	
@@ -962,12 +1028,12 @@ int calc(Uint32 steps)
 	if (spGetInput()->axis[0] < 0)
 	{
 		spGetInput()->axis[0] = 0;
-		sorting = (sorting+2)%3;
+		sorting = (sorting+3)%4;
 	}
 	if (spGetInput()->axis[0] > 0)
 	{
 		spGetInput()->axis[0] = 0;
-		sorting = (sorting+1)%3;
+		sorting = (sorting+1)%4;
 	}
 	
 	if (spGetInput()->button[SP_BUTTON_SELECT_NOWASD])
