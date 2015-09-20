@@ -118,15 +118,15 @@ class UpdateAction(argparse.Action):
 			print "[Hase]"
 			output = process.stdout.read().split('\n')
 			for line in output:
-				if line.startswith("<a href=hase.opk"):
+				if line.startswith("<li><a href=hase.opk"):
 					#searching the filename itself
-					parts = line.split('<a href=')
+					parts = line.split('<li><a href=')
 					parts = parts[1].split(' ')
 					print "filename: " + parts[0] #NEEDED!
-				if line.startswith("Updated at the "):
+				if line.startswith("<p>Updated at the "):
 					#Parsing the time
-					parts = line.split('Updated at the ')
-					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
+					parts = line.split('<p>Updated at the ')
+					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.</p>")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
 			print "description: A several times rewarded game about hares in space. A bit like worms, but with more gravity fun and online gaming against other GCW, Pandora or even PC users!"
 			print "url_addition: hase/"
