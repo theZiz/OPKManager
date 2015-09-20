@@ -10,7 +10,7 @@ class RegisterAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
 		print "Ziz's Repository" # Name
 		print "web" # Type (maybe web for web, or anything else for usb)
-		print "http://ziz.gp2x.de/downloads/" #URL
+		print "http://ziz.gp2x.de/" #URL
 		print "ziz.py --update" #Call for updating the list
 		print "Z" #letter to show
 
@@ -32,7 +32,7 @@ class UpdateAction(argparse.Action):
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
 			print "description: A puzzle game. On a tube!"#Description. Not needed.
-			print "url_addition: puzzletube/"#Url addition. Not needed.
+			print "url_addition: downloads/puzzletube/"#Url addition. Not needed.
 			print "image_url: http://ziz.gp2x.de/screenshots/puzzletube.png"
 			print "" #line breaks make the like beatiful
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/Sparrow-C4A-Manager/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -51,7 +51,7 @@ class UpdateAction(argparse.Action):
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
 			print "description: An alternative manager for Compo4All"
-			print "url_addition: Sparrow-C4A-Manager/"
+			print "url_addition: downloads/Sparrow-C4A-Manager/"
 			print "image_url: http://ziz.gp2x.de/screenshots/Sparrow-C4A-Manager.png"
 			print ""
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/OPKManager/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -71,7 +71,7 @@ class UpdateAction(argparse.Action):
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
 			print "description: A manager for all your opk files"
 			print "long_description: OPK Manager is a manager for OPK files. You can:\\n* Copy opk files\\n* Move opk files\\n* Delete opk files\\n* Install new opk files via internet\\n* See descriptions\\n* See the installation date\\n* See screenshots"
-			print "url_addition: OPKManager/"
+			print "url_addition: downloads/OPKManager/"
 			print "image_url: http://ziz.gp2x.de/screenshots/OPKManager.png"
 			print ""
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/glutexto/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -91,7 +91,7 @@ class UpdateAction(argparse.Action):
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
 			print "description: A simple text editor"
 			print "long_description: A text editor for the gcw. Use it for small changes of text configs or viweing large log files."
-			print "url_addition: glutexto/"
+			print "url_addition: downloads/glutexto/"
 			print "image_url: http://ziz.gp2x.de/screenshots/glutexto.png"
 			print ""
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/snowman/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -110,10 +110,10 @@ class UpdateAction(argparse.Action):
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
 			print "description: A jump and run about a snowman"
-			print "url_addition: snowman/"
+			print "url_addition: downloads/snowman/"
 			print "image_url: http://ziz.gp2x.de/screenshots/snowman.png"
 			print ""
-		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/hase/index.htm',stdout=subprocess.PIPE,shell=True)
+		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/hase/index.htm',stdout=subprocess.PIPE,shell=True)
 		if len(output) > 1:
 			print "[Hase]"
 			output = process.stdout.read().split('\n')
@@ -128,7 +128,7 @@ class UpdateAction(argparse.Action):
 					parts = line.split('Updated at the ')
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
-			print "description: A Prototype about hares in space. Like worms."
+			print "description: A several times rewarded game about hares in space. A bit like worms, but with more gravity fun and online gaming against other GCW, Pandora or even PC users!"
 			print "url_addition: hase/"
 			print "image_url: http://ziz.gp2x.de/screenshots/hase320.png"
 			print ""
@@ -148,7 +148,7 @@ class UpdateAction(argparse.Action):
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
 			print "description: A simple SDL IRC client"
-			print "url_addition: sissi/"
+			print "url_addition: downloads/sissi/"
 			print "image_url: http://ziz.gp2x.de/screenshots/sissi320.png"
 			print ""
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/meteoroid3d/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -167,7 +167,7 @@ class UpdateAction(argparse.Action):
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
 			print "description: The first REAL 3D game for the GCW"
-			print "url_addition: meteoroid3d/"
+			print "url_addition: downloads/meteoroid3d/"
 			print "image_url: http://ziz.gp2x.de/screenshots/meteoroid3d_320.png"
 			print ""
 def main():
