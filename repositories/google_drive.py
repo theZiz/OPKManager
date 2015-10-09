@@ -19,7 +19,7 @@ class RegisterAction(argparse.Action):
 class UpdateAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
 		process = subprocess.Popen('wget --no-check-certificate --timeout='+str(values[0])+' -qO- https://docs.google.com/folderview?id=0B9EgGumkJaabSE9TaEdFbVVBSlU#list',stdout=subprocess.PIPE,shell=True)
-		output = process.stdout.read().split('\n')[2]
+		output = process.stdout.read().split('\n')[1]
 		output = output.split('<div class="flip-entry" id="entry-')
 		first = 1
 		for output_part in output:
