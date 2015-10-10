@@ -5,17 +5,19 @@ import subprocess
 import argparse
 import time
 import calendar
+import datetime
 
 class RegisterAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
-		print "Ziz's Repository" # Name
+		print "Community Repository" # Name
 		print "web" # Type (maybe web for web, or anything else for usb)
-		print "http://ziz.gp2x.de/" #URL
+		print "" #URL
 		print "ziz.py --update" #Call for updating the list
-		print "Z" #letter to show
+		print "C" #letter to show
 
 class UpdateAction(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string=None):
+		#Ziz:
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/puzzletube/index.htm',stdout=subprocess.PIPE,shell=True)
 		output = process.stdout.read().split('\n')
 		if len(output) > 1:
@@ -31,8 +33,8 @@ class UpdateAction(argparse.Action):
 					parts = line.split('Updated at the ')
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
-			print "description: A puzzle game. On a tube!"#Description. Not needed.
-			print "url_addition: downloads/puzzletube/"#Url addition. Not needed.
+			print "description: A puzzle game. On a tube! Brought to you by Ziz."#Description. Not needed.
+			print "url_addition: http://ziz.gp2x.de/downloads/puzzletube/"#Url addition. Not needed.
 			print "image_url: http://ziz.gp2x.de/screenshots/puzzletube.png"
 			print "" #line breaks make the like beatiful
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/Sparrow-C4A-Manager/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -50,8 +52,8 @@ class UpdateAction(argparse.Action):
 					parts = line.split('Updated at the ')
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
-			print "description: An alternative manager for Compo4All"
-			print "url_addition: downloads/Sparrow-C4A-Manager/"
+			print "description: An alternative manager for Compo4All. Brought to you by Ziz."
+			print "url_addition: http://ziz.gp2x.de/downloads/Sparrow-C4A-Manager/"
 			print "image_url: http://ziz.gp2x.de/screenshots/Sparrow-C4A-Manager.png"
 			print ""
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/OPKManager/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -69,9 +71,9 @@ class UpdateAction(argparse.Action):
 					parts = line.split('Updated at the ')
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
-			print "description: A manager for all your opk files"
+			print "description: A manager for all your opk files. Brought to you by Ziz."
 			print "long_description: OPK Manager is a manager for OPK files. You can:\\n* Copy opk files\\n* Move opk files\\n* Delete opk files\\n* Install new opk files via internet\\n* See descriptions\\n* See the installation date\\n* See screenshots"
-			print "url_addition: downloads/OPKManager/"
+			print "url_addition: http://ziz.gp2x.de/downloads/OPKManager/"
 			print "image_url: http://ziz.gp2x.de/screenshots/OPKManager.png"
 			print ""
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/glutexto/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -89,9 +91,9 @@ class UpdateAction(argparse.Action):
 					parts = line.split('Updated at the ')
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
-			print "description: A simple text editor"
+			print "description: A simple text editor. Brought to you by Ziz."
 			print "long_description: A text editor for the gcw. Use it for small changes of text configs or viweing large log files."
-			print "url_addition: downloads/glutexto/"
+			print "url_addition: http://ziz.gp2x.de/downloads/glutexto/"
 			print "image_url: http://ziz.gp2x.de/screenshots/glutexto.png"
 			print ""
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/snowman/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -109,8 +111,8 @@ class UpdateAction(argparse.Action):
 					parts = line.split('Updated at the ')
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
-			print "description: A jump and run about a snowman"
-			print "url_addition: downloads/snowman/"
+			print "description: A jump and run about a snowman. Brought to you by Ziz."
+			print "url_addition: http://ziz.gp2x.de/downloads/snowman/"
 			print "image_url: http://ziz.gp2x.de/screenshots/snowman.png"
 			print ""
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/hase/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -128,8 +130,8 @@ class UpdateAction(argparse.Action):
 					parts = line.split('<p>Updated at the ')
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.</p>")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
-			print "description: A several times rewarded game about hares in space. A bit like worms, but with more gravity fun and online gaming against other GCW, Pandora or even PC users!"
-			print "url_addition: hase/"
+			print "description: A several times rewarded game about hares in space. A bit like worms, but with more gravity fun and online gaming against other GCW, Pandora or even PC users!. Brought to you by Ziz."
+			print "url_addition: http://ziz.gp2x.de/hase/"
 			print "image_url: http://ziz.gp2x.de/screenshots/hase320.png"
 			print ""
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/sissi/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -147,8 +149,8 @@ class UpdateAction(argparse.Action):
 					parts = line.split('Updated at the ')
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
-			print "description: A simple SDL IRC client"
-			print "url_addition: downloads/sissi/"
+			print "description: A simple SDL IRC client. Brought to you by Ziz."
+			print "url_addition: http://ziz.gp2x.de/downloads/sissi/"
 			print "image_url: http://ziz.gp2x.de/screenshots/sissi320.png"
 			print ""
 		process = subprocess.Popen('wget --timeout='+str(values[0])+' -qO- http://ziz.gp2x.de/downloads/meteoroid3d/index.htm',stdout=subprocess.PIPE,shell=True)
@@ -166,10 +168,68 @@ class UpdateAction(argparse.Action):
 					parts = line.split('Updated at the ')
 					t = time.strptime(parts[1],"%d.%m.%Y %H:%M.")
 					print "version: " + str(calendar.timegm(t)) #NEEDED!
-			print "description: The first REAL 3D game for the GCW"
-			print "url_addition: downloads/meteoroid3d/"
+			print "description: The first REAL 3D game for the GCW. Brought to you by Ziz."
+			print "url_addition: http://ziz.gp2x.de/downloads/meteoroid3d/"
 			print "image_url: http://ziz.gp2x.de/screenshots/meteoroid3d_320.png"
 			print ""
+		#David Knight
+		process = subprocess.Popen('wget --no-check-certificate --timeout='+str(values[0])+' -qO- https://drive.google.com/folderview?hl=en\&id=0BwYi4RGX-HSaY01ielN2N2lKa1k#list',stdout=subprocess.PIPE,shell=True)
+		output = process.stdout.read().split('\n')[1]
+		output = output.split('<div class="flip-entry" id="entry-')
+		now = datetime.datetime.now()
+		year = now.year;
+		first = 1
+		for output_part in output:
+			if first:
+				first = 0
+				continue
+			filename = output_part.split('"')[0]
+			real_filename = output_part.split('<div class="flip-entry-title">')[1].split('</div>')[0]
+			splitted_filename = real_filename.split('.opk')
+			version = output_part.split('<div class="flip-entry-last-modified"><div>')[1].split('</div')[0]
+			if len(splitted_filename) < 2:
+				continue
+			print "["+splitted_filename[0]+"]"
+			print "download_filename: "+filename
+			print "filename: "+real_filename
+			try:
+				t = time.strptime(version,"%m/%d/%y")
+			except ValueError:
+				# Mon d format
+				date_split = version.split(' ')
+				day = date_split[1];
+				month = 1
+				if (date_split[0] == 'Jan'):
+					month = 1
+				if (date_split[0] == 'Feb'):
+					month = 2
+				if (date_split[0] == 'Mar'):
+					month = 3
+				if (date_split[0] == 'Apr'):
+					month = 4
+				if (date_split[0] == 'May'):
+					month = 5
+				if (date_split[0] == 'Jun'):
+					month = 6
+				if (date_split[0] == 'Jul'):
+					month = 7
+				if (date_split[0] == 'Aug'):
+					month = 8
+				if (date_split[0] == 'Sep'):
+					month = 9
+				if (date_split[0] == 'Oct'):
+					month = 10
+				if (date_split[0] == 'Nov'):
+					month = 11
+				if (date_split[0] == 'Dec'):
+					month = 12
+				version = str(month) + "/" + day + "/" + str(year)
+				t = time.strptime(version,"%m/%d/%Y")
+			print "version: " + str(calendar.timegm(t)) #NEEDED!
+			print "https://docs.google.com/uc?export=download\&id="
+			print "description: " + splitted_filename[0] + ". Brought to you by David Knight."
+			print ""
+
 def main():
 	parser = argparse.ArgumentParser(description="Ziz's Repository script")
 	parser.add_argument('--register', nargs=0, action=RegisterAction)
