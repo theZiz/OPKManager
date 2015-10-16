@@ -292,26 +292,8 @@ class UpdateAction(argparse.Action):
 				t = time.strptime(version,"%Y-%m-%dT%H:%M:%SZ")
 				break
 		print "[Mednafen]"
-		print "filename: mednafen_generic.opk" #NEEDED!
+		print "filename: mednafen.opk" #NEEDED!
 		print "description: Mednafan for GB/GBA/NES/LYNX. Brought to you by Gameblabla."
-		print "url_addition: https://github.com/gameblabla/mednafen-gcw/raw/master/release/"
-		print "version: " + str(calendar.timegm(t)) #NEEDED!
-		print ""
-		print "[Mednafen PCE]"
-		print "filename: mednafen_pce.opk" #NEEDED!
-		print "description: Mednafan for PCE. Brought to you by Gameblabla."
-		print "url_addition: https://github.com/gameblabla/mednafen-gcw/raw/master/release/"
-		print "version: " + str(calendar.timegm(t)) #NEEDED!
-		print ""
-		print "[Mednafen PCFX]"
-		print "filename: mednafen_pcfx.opk" #NEEDED!
-		print "description: Mednafan for PCFX. Brought to you by Gameblabla."
-		print "url_addition: https://github.com/gameblabla/mednafen-gcw/raw/master/release/"
-		print "version: " + str(calendar.timegm(t)) #NEEDED!
-		print ""
-		print "[Mednafen PSX]"
-		print "filename: mednafen_psx.opk" #NEEDED!
-		print "description: Mednafan for PSX. Brought to you by Gameblabla."
 		print "url_addition: https://github.com/gameblabla/mednafen-gcw/raw/master/release/"
 		print "version: " + str(calendar.timegm(t)) #NEEDED!
 		print ""
