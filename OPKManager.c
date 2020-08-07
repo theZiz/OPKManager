@@ -3,15 +3,15 @@
   * it under the terms of the GNU General Public License as published by
   * the Free Software Foundation, either version 2 of the License, or
   * (at your option) any later version.
-  * 
+  *
   * OPKManager is distributed in the hope that it will be useful,
   * but WITHOUT ANY WARRANTY; without even the implied warranty of
   * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   * GNU General Public License for more details.
-  * 
+  *
   * You should have received a copy of the GNU General Public License
   * along with OPKManager.  If not, see <http://www.gnu.org/licenses/>
-  * 
+  *
   * For feedback and questions about my Files and Projects please mail me,
   * Alexander Matthes (Ziz) , zizsdl_at_googlemail.com */
 
@@ -24,6 +24,7 @@
 #if defined GCW_FEELING && defined DESKTOP
 	#define TESTING
 	#define GCW
+//	#define RG350
 	#undef DESKTOP
 #endif
 
@@ -40,7 +41,7 @@
 #else
 	#define ROOT "./test"
 #endif
-#define VERSION "1.0.0.9"
+#define VERSION "1.0.0.10"
 #define FONT_LOCATION "./font/CabinCondensed-Regular.ttf"
 #define FONT_SIZE 11
 #define FONT_SIZE_SMALL 9
@@ -204,7 +205,7 @@ void draw( void )
 	while (opk)
 	{
 		spSetVerticalOrigin(SP_TOP);
-		spSetHorizontalOrigin(SP_LEFT);			
+		spSetHorizontalOrigin(SP_LEFT);
 		if (i == selected)
 		{
 			spRectangle(0,1+(offset+i)*font->maxheight,0,screen->w-2,font->maxheight,SELECTED_BACKGROUND_COLOR);
@@ -230,7 +231,7 @@ void draw( void )
 			{
 				case 0: internal = 1; break;
 				case 1: sdcard = 1; break;
-				case 2: 
+				case 2:
 					for (j = 1; j <= location_count; j++)
 						if (location[j] == source->location)
 							web[j] = 1;
@@ -242,7 +243,7 @@ void draw( void )
 				{
 					case 0: internal_u = 1; break;
 					case 1: sdcard_u = 1; break;
-					case 2: 
+					case 2:
 						for (j = 1; j <= location_count; j++)
 							if (location[j] == source->location)
 								web_u[j] = 1;
@@ -315,7 +316,7 @@ void draw( void )
 		           listSurface->w- 1, 11,0,FONT_COLOR);
 	}
 	//drawing all
-	
+
 	spSelectRenderTarget(spGetWindowSurface());
 	spClearTarget( BACKGROUND_COLOR );
 	spFontDrawMiddle(screen->w/2,0,0,"OPKManager",font);
@@ -372,7 +373,7 @@ void draw( void )
 	spFontDraw(13*screen->w/30,screen->h-2*font->maxheight-1,0,"[w]: Delete",font_small);
 	spFontDraw(6*screen->w/10,screen->h-2*font->maxheight-1,0,"[s]: Details",font_small);
 	spFontDraw(8*screen->w/10,screen->h-2*font->maxheight-1,0,"[S]: Run",font_small);
-	
+
 	spFontDraw(0*screen->w/10+2,screen->h-1*font->maxheight,0,"[q]: Update Repositories, needs internet!",font_small);
 	spFontDraw(6*screen->w/10,screen->h-1*font->maxheight,0,"[e]: Help",font_small);
 	spFontDraw(8*screen->w/10,screen->h-1*font->maxheight,0,"[E]: Exit",font_small);
@@ -594,9 +595,9 @@ int calc(Uint32 steps)
 			}
 			break;
 	}
-	
-	
-	
+
+
+
 	opk = sortedOpkList;
 	pOpkList sel = NULL;
 	int i = 0;
@@ -658,7 +659,7 @@ int calc(Uint32 steps)
 					show_error = 3;
 					return 0;
 				}
-				
+
 				from_sel_source = source;
 				if (from_sel->kind == 2)
 					copy_is_install = 1;
@@ -755,7 +756,7 @@ int calc(Uint32 steps)
 			{
 				if (result == 2)
 				{
-					printf("Overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,to_sel_source->fileName);					
+					printf("Overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,to_sel_source->fileName);
 					system_copy_overwrite(sel,from_sel_source,to_sel_source);
 				}
 				show_copy = 0;
@@ -874,7 +875,7 @@ int calc(Uint32 steps)
 			{
 				if (result == 2)
 				{
-					printf("Moving overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,to_sel_source->fileName);					
+					printf("Moving overwriting from %s%s to %s%s\n",from_sel->url,from_sel_source->fileName,to_sel->url,to_sel_source->fileName);
 					system_move_overwrite(sel,from_sel_source,to_sel_source);
 				}
 				show_move = 0;
@@ -927,7 +928,7 @@ int calc(Uint32 steps)
 			{
 				if (result == 2)
 				{
-					printf("Deleting %s%s\n",from_sel->url,from_sel_source->fileName);					
+					printf("Deleting %s%s\n",from_sel->url,from_sel_source->fileName);
 					system_delete(sel,from_sel_source);
 				}
 				show_delete = 0;
@@ -1035,7 +1036,7 @@ int calc(Uint32 steps)
 		spGetInput()->axis[0] = 0;
 		sorting = (sorting+1)%4;
 	}
-	
+
 	if (spGetInput()->button[SP_BUTTON_SELECT_NOWASD])
 		return 1;
 	if (spGetInput()->button[SP_BUTTON_LEFT_NOWASD] && opk_count>0) //COPY
@@ -1082,7 +1083,7 @@ int calc(Uint32 steps)
 					show_error = 3;
 					return 0;
 				}
-				
+
 				to_sel_source = NULL;
 				source = sel->sources;
 				while (source)
@@ -1232,7 +1233,7 @@ void resize(Uint16 w,Uint16 h)
 {
   //Setup of the new/resized window
   spSelectRenderTarget(spGetWindowSurface());
-  
+
 	spFontShadeButtons(1);
 	//Font Loading
 	spFontSetShadeColor(BACKGROUND_COLOR);
@@ -1295,7 +1296,7 @@ void init_OPKManager(int all)
 	                                 spConfigGetInt(config,"list_background_color_b",LIST_BACKGROUND_COLOR_B));
 	SELECTED_BACKGROUND_COLOR = spGetRGB(spConfigGetInt(config,"selected_background_color_r",SELECTED_BACKGROUND_COLOR_R),
 	                                     spConfigGetInt(config,"selected_background_color_g",SELECTED_BACKGROUND_COLOR_G),
-	                                     spConfigGetInt(config,"selected_background_color_b",SELECTED_BACKGROUND_COLOR_B));	
+	                                     spConfigGetInt(config,"selected_background_color_b",SELECTED_BACKGROUND_COLOR_B));
 	spConfigWrite(config);
 	spConfigFree(config);
 	screen = spCreateDefaultWindow();
@@ -1318,12 +1319,16 @@ void init_OPKManager(int all)
 		if (spFileExists(get_path(buffer,"repositories.txt")) == 0)
 		{
 			FILE *fp = fopen(get_path(buffer,"repositories.txt"), "w");
-			fprintf(fp,"http://ziz.gp2x.de/gcw-repos/ziz.py\n");
+			#ifdef RG350
+				fprintf(fp,"http://ziz.gp2x.de/gcw-repos/ziz-rg350.py\n");
+			#else
+				fprintf(fp,"http://ziz.gp2x.de/gcw-repos/ziz.py\n");
+			#endif
 			fprintf(fp,"http://ziz.gp2x.de/gcw-repos/official.py\n");
 			fclose(fp);
 		}
 		load_repository_list();
-		
+
 		spCreateDirectoryChain(get_path(buffer,"alias"));
 		if (spFileExists(get_path(buffer,"alias.txt")) == 0)
 		{
@@ -1333,7 +1338,7 @@ void init_OPKManager(int all)
 		}
 		load_alias_list();
 		update_alias();
-		
+
 		//Reading help
 		SDL_RWops *file=SDL_RWFromFile("./README.md","r");
 		if (file)

@@ -81,7 +81,7 @@ class UpdateAction(argparse.Action):
 				if (found_version and found_image and found_long):
 					break
 			print ""
-		
+
 
 def main():
 	parser = argparse.ArgumentParser(description="Ziz's Repository script")

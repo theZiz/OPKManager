@@ -37,6 +37,9 @@ This program was developed by Ziz. It comes with no warranty of anything. ;) It 
 Changelog
 =========
 
+1.0.0.10:
+* Added version for the RG-350
+
 1.0.0.9:
 * Implemented sorting by update avaibility
 

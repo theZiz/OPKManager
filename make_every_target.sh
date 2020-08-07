@@ -3,7 +3,7 @@
 cd ../sparrow3d
 #FILES=./target-files/*
 #The program only makes sense for a couple of targets:
-FILES="./target-files/gcw.mk"
+FILES="./target-files/gcw.mk ./target-files/rg350.mk"
 echo "Compiling for all targets..."
 for f in $FILES
 do

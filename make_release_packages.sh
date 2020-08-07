@@ -1,13 +1,14 @@
 #!/bin/sh
 # Change the folder to YOUR sparrow3d folder!
 PROGRAM="OPKManager"
-VERSION="1.0.0.8"
-DEST=./build/gcw
+VERSION="1.0.0.10"
+DEST=./build/*
 echo "<html>" > index.htm
 echo "<head>" >> index.htm
 echo "</head>" >> index.htm
 echo "<body>" >> index.htm
 TIME=`date -u +"%d.%m.%Y %R"`
+echo "Version $VERSION" >> index.htm
 echo "Updated at the $TIME." >> index.htm
 echo "<h1>$PROGRAM download links:</h1>" >> index.htm
 for f in $DEST
@@ -35,11 +36,18 @@ do
 				if [ $NAME = "gcw" ]; then
 					mksquashfs * "$PROGRAM.opk" -all-root -noappend -no-exports -no-xattrs
 					mv "$PROGRAM.opk" ../..
-					echo "<a href=$PROGRAM.opk type=\"application/x-opk+squashfs\">Download Version $VERSION</a></br>" >> ../../index.htm
+					echo "<a href=$PROGRAM.opk type=\"application/x-opk+squashfs\">$NAME</a></br>" >> ../../index.htm
 				else
-					zip -r "$PROGRAM-$NAME-$VERSION.zip" * > /dev/null
-					mv "$PROGRAM-$NAME-$VERSION.zip" ../..
-					echo "<a href=$PROGRAM-$NAME-$VERSION.zip>$NAME</a></br>" >> ../../index.htm
+					if [ $NAME = "rg350" ]; then
+						mksquashfs * "$PROGRAM-rg350.opk" -all-root -noappend -no-exports -no-xattrs
+						mv "$PROGRAM-rg350.opk" ../..
+						echo "<a href=$PROGRAM-rg350.opk type=\"application/x-opk+squashfs\">$NAME</a></br>" >> ../../index.htm
+					else
+						zip -r "$PROGRAM-$NAME-$VERSION.zip" * > /dev/null
+						mv "$PROGRAM-$NAME-$VERSION.zip" ../..
+						echo "<a href=$PROGRAM-$NAME-$VERSION.zip>$NAME</a></br>" >> ../../index.htm
+symlink.php
+					fi
 				fi
 			fi
 		fi
